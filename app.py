@@ -5,19 +5,17 @@ from datetime import datetime
 import uuid
 
 app = Flask(__name__)
-app.secret_key = token_hex(16)  # Secure random secret key
+app.secret_key = token_hex(16)
 
-# Database connection configuration
 DB_CONFIG = {
     'host': 'localhost',
-    'user': 'root',  # Replace with your MySQL username
-    'password': '',  # Replace with your MySQL password
-    'db': 'flight',  # Replace with your database name
+    'user': 'root',
+    'password': '',
+    'db': 'flight',
     'charset': 'utf8mb4',
-    'cursorclass': pymysql.cursors.DictCursor  # Returns results as dictionaries
+    'cursorclass': pymysql.cursors.DictCursor
 }
 
-# Global connection (for simplicity; use connection pooling in production)
 connection = None
 
 def get_db_connection():
@@ -40,36 +38,36 @@ def home():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
+        identifier = request.form['email']  # Use 'email' for flexibility
         password = request.form['password']
-        user_type = request.form['user_type']  # Could be 'customer', 'booking_agent', or 'airline_staff'
+        user_type = request.form['user_type']
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
         if user_type == 'customer':
-            query = "SELECT * FROM Customer WHERE email = %s AND password = %s"
-            cursor.execute(query, (email, password))
+            query = "SELECT * FROM customer WHERE email = %s AND password = %s"
+            cursor.execute(query, (identifier, password))
             user = cursor.fetchone()
             if user:
                 flash('Logged in successfully as Customer!', 'success')
-                return redirect(url_for('customer_dashboard', email=email))
+                return redirect(url_for('customer_dashboard', email=identifier))
             else:
                 flash('Invalid credentials!', 'error')
         elif user_type == 'booking_agent':
-            query = "SELECT * FROM BookingAgent WHERE email = %s AND password = %s"
-            cursor.execute(query, (email, password))
+            query = "SELECT * FROM booking_agent WHERE email = %s AND password = %s"
+            cursor.execute(query, (identifier, password))
             user = cursor.fetchone()
             if user:
                 flash('Logged in successfully as Booking Agent!', 'success')
-                return redirect(url_for('booking_agent_dashboard', email=email))
+                return redirect(url_for('booking_agent_dashboard', email=identifier))
         elif user_type == 'airline_staff':
-            query = "SELECT * FROM AirlineStaff WHERE username = %s AND password = %s"
-            cursor.execute(query, (email, password))
+            query = "SELECT * FROM airline_staff WHERE username = %s AND password = %s"
+            cursor.execute(query, (identifier, password))
             user = cursor.fetchone()
             if user:
                 flash('Logged in successfully as Airline Staff!', 'success')
-                return redirect(url_for('airline_staff_dashboard', username=email))
+                return redirect(url_for('airline_staff_dashboard', username=identifier))
 
         cursor.close()
         return redirect(url_for('login'))
@@ -81,11 +79,15 @@ def login():
 def customer_dashboard(email):
     conn = get_db_connection()
     cursor = conn.cursor()
-    query = "SELECT * FROM Customer WHERE email = %s"
+    query = "SELECT * FROM customer WHERE email = %s"
     cursor.execute(query, (email,))
     customer = cursor.fetchone()
 
-    query_flights = "SELECT * FROM Flight"
+    query_flights = """
+        SELECT f.* FROM flight f 
+        JOIN airport depart ON f.departure_airport = depart.airport_name 
+        JOIN airport arrive ON f.arrival_airport = arrive.airport_name
+    """
     cursor.execute(query_flights)
     flights = cursor.fetchall()
 
@@ -97,16 +99,20 @@ def customer_dashboard(email):
 def booking_agent_dashboard(email):
     conn = get_db_connection()
     cursor = conn.cursor()
-    query = "SELECT * FROM BookingAgent WHERE email = %s"
+    query = "SELECT * FROM booking_agent WHERE email = %s"
     cursor.execute(query, (email,))
     agent = cursor.fetchone()
 
-    # Example query for commissions (simplified)
     query_commissions = """
         SELECT SUM(f.price * 0.1) as total_commission 
-        FROM Ticket t 
-        JOIN Flight f ON t.airline_name = f.airline_name AND t.flight_num = f.flight_num 
-        WHERE t.booking_agent_email = %s AND t.purchase_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+        FROM purchases p 
+        JOIN ticket t ON p.ticket_id = t.ticket_id 
+        JOIN flight f ON t.airline_name = f.airline_name AND t.flight_num = f.flight_num 
+        WHERE p.customer_email IN (
+            SELECT c.email FROM customer c 
+            JOIN purchases p2 ON c.email = p2.customer_email 
+            WHERE p2.booking_agent_id = (SELECT booking_agent_id FROM booking_agent WHERE email = %s)
+        ) AND p.purchase_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
     """
     cursor.execute(query_commissions, (email,))
     commissions = cursor.fetchone()
@@ -119,11 +125,14 @@ def booking_agent_dashboard(email):
 def airline_staff_dashboard(username):
     conn = get_db_connection()
     cursor = conn.cursor()
-    query = "SELECT * FROM AirlineStaff WHERE username = %s"
+    query = "SELECT * FROM airline_staff WHERE username = %s"
     cursor.execute(query, (username,))
     staff = cursor.fetchone()
 
-    query_flights = "SELECT * FROM Flight WHERE airline_name = (SELECT airline_name FROM staff_works_for WHERE staff_username = %s)"
+    query_flights = """
+        SELECT f.* FROM flight f 
+        WHERE f.airline_name = (SELECT airline_name FROM airline_staff WHERE username = %s)
+    """
     cursor.execute(query_flights, (username,))
     flights = cursor.fetchall()
 
@@ -140,11 +149,11 @@ def search_flights():
         conn = get_db_connection()
         cursor = conn.cursor()
         query = """
-            SELECT f.* FROM Flight f
-            JOIN Airport depart ON f.depart_airport_name = depart.name
-            JOIN Airport arrive ON f.arrive_airport_name = arrive.name
-            WHERE (depart.name = %s OR depart.city = %s)
-            AND (arrive.name = %s OR arrive.city = %s)
+            SELECT f.* FROM flight f 
+            JOIN airport depart ON f.departure_airport = depart.airport_name 
+            JOIN airport arrive ON f.arrival_airport = arrive.airport_name 
+            WHERE depart.airport_name = %s OR depart.airport_city = %s 
+            AND (arrive.airport_name = %s OR arrive.airport_city = %s)
         """
         cursor.execute(query, (source, source, destination, destination))
         flights = cursor.fetchall()
@@ -154,7 +163,7 @@ def search_flights():
 
     conn = get_db_connection()
     cursor = conn.cursor()
-    query_airports = "SELECT * FROM Airport"
+    query_airports = "SELECT * FROM airport"
     cursor.execute(query_airports)
     airports = cursor.fetchall()
     cursor.close()
@@ -162,16 +171,21 @@ def search_flights():
     return render_template('search_flights.html', airports=airports)
 
 # Purchase Ticket (Example for Customer)
-@app.route('/purchase/<flight_id>', methods=['POST'])
-def purchase_ticket(flight_id):
-    customer_email = request.form['customer_email']  # Assume customer is logged in
+@app.route('/purchase/<airline_name>/<flight_num>', methods=['POST'])
+def purchase_ticket(airline_name, flight_num):
+    customer_email = request.form['customer_email']
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
     # Check seat availability
-    query_flight = "SELECT airline_name, flight_num, seats FROM Flight NATURAL JOIN airplane WHERE CONCAT(airline_name, flight_num) = %s"
-    cursor.execute(query_flight, (flight_id,))
+    query_flight = """
+        SELECT f.airline_name, f.flight_num, a.seats 
+        FROM flight f 
+        JOIN airplane a ON f.airline_name = a.airline_name AND f.airplane_id = a.airplane_id 
+        WHERE f.airline_name = %s AND f.flight_num = %s
+    """
+    cursor.execute(query_flight, (airline_name, flight_num))
     flight = cursor.fetchone()
 
     if not flight:
@@ -180,17 +194,26 @@ def purchase_ticket(flight_id):
         return redirect(url_for('customer_dashboard', email=customer_email))
 
     # Count current tickets for this flight
-    query_tickets = "SELECT COUNT(*) as ticket_count FROM Ticket WHERE airline_name = %s AND flight_num = %s"
-    cursor.execute(query_tickets, (flight['airline_name'], flight['flight_num']))
+    query_tickets = """
+        SELECT COUNT(*) as ticket_count FROM ticket 
+        WHERE airline_name = %s AND flight_num = %s
+    """
+    cursor.execute(query_tickets, (airline_name, flight_num))
     ticket_count = cursor.fetchone()['ticket_count']
 
     if ticket_count < flight['seats']:
         ticket_id = str(uuid.uuid4())
         query_insert = """
-            INSERT INTO Ticket (ticket_id, airline_name, flight_num, customer_email, booking_agent_email) 
-            VALUES (%s, %s, %s, %s, NULL)
+            INSERT INTO ticket (ticket_id, airline_name, flight_num) 
+            VALUES (%s, %s, %s)
         """
-        cursor.execute(query_insert, (ticket_id, flight['airline_name'], flight['flight_num'], customer_email))
+        cursor.execute(query_insert, (ticket_id, airline_name, flight_num))
+        # Link to purchases
+        query_purchase = """
+            INSERT INTO purchases (ticket_id, customer_email, purchase_date) 
+            VALUES (%s, %s, NOW())
+        """
+        cursor.execute(query_purchase, (ticket_id, customer_email))
         conn.commit()
         flash('Ticket purchased successfully!', 'success')
     else:

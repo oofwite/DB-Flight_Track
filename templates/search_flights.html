@@ -6,13 +6,13 @@
     <label>Source Airport/City:</label>
     <select name="source" required>
         {% for airport in airports %}
-            <option value="{{ airport['name'] }}">{{ airport['name'] }} ({{ airport['city'] }})</option>
+            <option value="{{ airport['airport_name'] }}">{{ airport['airport_name'] }} ({{ airport['airport_city'] }})</option>
         {% endfor %}
     </select><br>
     <label>Destination Airport/City:</label>
     <select name="destination" required>
         {% for airport in airports %}
-            <option value="{{ airport['name'] }}">{{ airport['name'] }} ({{ airport['city'] }})</option>
+            <option value="{{ airport['airport_name'] }}">{{ airport['airport_name'] }} ({{ airport['airport_city'] }})</option>
         {% endfor %}
     </select><br>
     <button type="submit">Search</button>
