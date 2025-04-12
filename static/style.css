@@ -1,12 +1,12 @@
 body {
-    font-family: Arial, sans-serif;
+    font-family: Open Sans, sans-serif;
     margin: 0;
     padding: 0;
     background-color: #f4f4f4;
 }
 
 nav {
-    background-color: #333;
+    background-color: #57068c;
     padding: 1em;
 }
 
@@ -17,7 +17,7 @@ nav a {
 }
 
 h1 {
-    color: #333;
+    color: #57068c;
     margin-top: 20px;
 }
 
@@ -37,14 +37,14 @@ input, select, button {
 }
 
 button {
-    background-color: #4CAF50;
+    background-color: #330662;
     color: white;
     border: none;
     cursor: pointer;
 }
 
 button:hover {
-    background-color: #45a049;
+    background-color: #ab82c5;
 }
 
 .alert {
