@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Flight Results{% endblock %}
+{% block content %}
+<h1>Flight Results</h1>
+{% if flights %}
+    <ul>
+    {% for flight in flights %}
+        <li>{{ flight['airline_name'] }} Flight #{{ flight['flight_num'] }}: {{ flight['depart_airport_name'] }} to {{ flight['arrive_airport_name'] }} at {{ flight['departure_time'] }} - Price: ${{ flight['price'] }}</li>
+        <form method="POST" action="{{ url_for('purchase_ticket', flight_id=flight['airline_name'] + flight['flight_num']) }}">
+            <input type="hidden" name="customer_email" value="{{ request.args.get('email', '') }}">
+            <button type="submit">Purchase</button>
+        </form>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No flights found.</p>
+{% endif %}
+{% endblock %}
