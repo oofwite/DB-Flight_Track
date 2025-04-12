@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customer Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Welcome, {{ username }}!</h1>
+    <ul>
+        <li><a href="{{ url_for('my_flights') }}">View My Flights</a></li>
+        <li><a href="{{ url_for('search_flights') }}">Search Flights</a></li>
+        <li><a href="{{ url_for('track_spending') }}">Track My Spending</a></li>
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+    </ul>
+</body>
+</html>

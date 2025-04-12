@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Track Spending</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Track My Spending</h1>
+    <p>Total spent in the past year: ${{ total_spent }}</p>
+    <h2>Monthly Spending (Last 6 Months)</h2>
+    <table>
+        <tr><th>Month</th><th>Spent</th></tr>
+        {% for month in monthly_spending %}
+        <tr><td>{{ month.month }}</td><td>${{ month.spent }}</td></tr>
+        {% endfor %}
+    </table>
+    <p><a href="{{ url_for('home') }}">Back to Home</a></p>
+</body>
+</html>

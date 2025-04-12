@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flight Status</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Flight Status</h1>
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+    {% if status %}
+        <p>Status: {{ status }}</p>
+    {% endif %}
+    <form method="POST">
+        <label>Flight Number:</label><input type="text" name="flight_num" required><br>
+        <label>Date:</label><input type="date" name="date" required><br>
+        <input type="submit" value="Check Status">
+    </form>
+    <p><a href="{{ url_for('home') }}">Back to Home</a></p>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Booking Agent Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Welcome, {{ username }}!</h1>
+    <ul>
+        <li><a href="{{ url_for('agent_flights') }}">View My Booked Flights</a></li>
+        <li><a href="{{ url_for('search_flights') }}">Search Flights</a></li>
+        <li><a href="{{ url_for('commission_report') }}">View Commission Report</a></li>
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+    </ul>
+</body>
+</html>

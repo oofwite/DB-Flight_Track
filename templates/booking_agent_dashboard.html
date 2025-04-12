@@ -1,9 +1,0 @@
-{% extends "base.html" %}
-{% block title %}Booking Agent Dashboard{% endblock %}
-{% block content %}
-<h1>Booking Agent Dashboard</h1>
-<p>Welcome, Agent (Email: {{ agent['email'] }})</p>
-<h2>Commissions (Last 30 Days)</h2>
-<p>Total Commission: ${{ commissions['total_commission'] if commissions and 'total_commission' in commissions else 0 }}</p>
-<!-- Add more features like ticket booking for customers here -->
-{% endblock %}

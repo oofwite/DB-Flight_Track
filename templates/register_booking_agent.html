@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register Booking Agent</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Register as Booking Agent</h1>
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+    <form method="POST">
+        <label>Email:</label><input type="email" name="email" required><br>
+        <label>Password:</label><input type="password" name="password" required><br>
+        <label>Booking Agent ID:</label><input type="text" name="booking_agent_id" required><br>
+        <input type="submit" value="Register">
+    </form>
+    <p><a href="{{ url_for('login') }}">Back to Login</a></p>
+</body>
+</html>

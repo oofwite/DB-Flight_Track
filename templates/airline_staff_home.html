@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Airline Staff Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Welcome, {{ username }}!</h1>
+    <ul>
+        <li><a href="{{ url_for('staff_flights') }}">View Flights</a></li>
+        <li><a href="{{ url_for('create_flight') }}">Create New Flight</a></li>
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+    </ul>
+</body>
+</html>

@@ -1,20 +1,17 @@
-{% extends "base.html" %}
-{% block title %}Search Flights{% endblock %}
-{% block content %}
-<h1>Search Flights</h1>
-<form method="POST">
-    <label>Source Airport/City:</label>
-    <select name="source" required>
-        {% for airport in airports %}
-            <option value="{{ airport['name'] }}">{{ airport['name'] }} ({{ airport['city'] }})</option>
-        {% endfor %}
-    </select><br>
-    <label>Destination Airport/City:</label>
-    <select name="destination" required>
-        {% for airport in airports %}
-            <option value="{{ airport['name'] }}">{{ airport['name'] }} ({{ airport['city'] }})</option>
-        {% endfor %}
-    </select><br>
-    <button type="submit">Search</button>
-</form>
-{% endblock %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Flights</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Search Flights</h1>
+    <form method="POST">
+        <label>Source Airport:</label><input type="text" name="source" required><br>
+        <label>Destination Airport:</label><input type="text" name="destination" required><br>
+        <label>Date:</label><input type="date" name="date" required><br>
+        <input type="submit" value="Search">
+    </form>
+    <p><a href="{{ url_for('home') }}">Back to Home</a></p>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Booked Flights</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Flights Booked for Customers</h1>
+    <table>
+        <tr><th>Airline</th><th>Flight Number</th><th>Departure</th><th>Arrival</th><th>Customer Email</th></tr>
+        {% for flight in flights %}
+        <tr>
+            <td>{{ flight.airline_name }}</td>
+            <td>{{ flight.flight_num }}</td>
+            <td>{{ flight.departure_time }} from {{ flight.departure_airport }}</td>
+            <td>{{ flight.arrival_time }} to {{ flight.arrival_airport }}</td>
+            <td>{{ flight.customer_email }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <p><a href="{{ url_for('home') }}">Back to Home</a></p>
+</body>
+</html>

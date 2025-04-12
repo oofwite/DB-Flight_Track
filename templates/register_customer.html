@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register Customer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Register as Customer</h1>
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+    <form method="POST">
+        <label>Email:</label><input type="email" name="email" required><br>
+        <label>Name:</label><input type="text" name="name" required><br>
+        <label>Password:</label><input type="password" name="password" required><br>
+        <label>Building Number:</label><input type="text" name="building_number" required><br>
+        <label>Street:</label><input type="text" name="street" required><br>
+        <label>City:</label><input type="text" name="city" required><br>
+        <label>State:</label><input type="text" name="state" required><br>
+        <label>Phone Number:</label><input type="number" name="phone_number" required><br>
+        <label>Passport Number:</label><input type="text" name="passport_number" required><br>
+        <label>Passport Expiration:</label><input type="date" name="passport_expiration" required><br>
+        <label>Passport Country:</label><input type="text" name="passport_country" required><br>
+        <label>Date of Birth:</label><input type="date" name="date_of_birth" required><br>
+        <input type="submit" value="Register">
+    </form>
+    <p><a href="{{ url_for('login') }}">Back to Login</a></p>
+</body>
+</html>

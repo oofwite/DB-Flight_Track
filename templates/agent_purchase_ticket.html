@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Purchase Ticket for Customer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Purchase Ticket for {{ airline_name }} Flight {{ flight_num }}</h1>
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+    <form method="POST">
+        <label>Customer Email:</label><input type="email" name="customer_email" required><br>
+        <input type="submit" value="Purchase">
+    </form>
+    <p><a href="{{ url_for('search_flights') }}">Back to Search</a></p>
+</body>
+</html>

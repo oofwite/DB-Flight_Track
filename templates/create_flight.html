@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create New Flight</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Create New Flight</h1>
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+    <form method="POST">
+        <label>Flight Number:</label><input type="text" name="flight_num" required><br>
+        <label>Departure Airport:</label><input type="text" name="departure_airport" required><br>
+        <label>Departure Time:</label><input type="datetime-local" name="departure_time" required><br>
+        <label>Arrival Airport:</label><input type="text" name="arrival_airport" required><br>
+        <label>Arrival Time:</label><input type="datetime-local" name="arrival_time" required><br>
+        <label>Price:</label><input type="number" name="price" required><br>
+        <label>Status:</label><input type="text" name="status" required><br>
+        <label>Airplane ID:</label><input type="text" name="airplane_id" required><br>
+        <input type="submit" value="Create Flight">
+    </form>
+    <p><a href="{{ url_for('staff_flights') }}">Back to Flights</a></p>
+</body>
+</html>

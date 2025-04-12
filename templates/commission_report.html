@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Commission Report</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Commission Report (Last 30 Days)</h1>
+    <p>Total Tickets Sold: {{ tickets }}</p>
+    <p>Total Commission: ${{ total_commission }}</p>
+    <p>Average Commission per Ticket: ${{ avg_commission }}</p>
+    <p><a href="{{ url_for('home') }}">Back to Home</a></p>
+</body>
+</html>

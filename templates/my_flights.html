@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Flights</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>My Upcoming Flights</h1>
+    <table>
+        <tr><th>Airline</th><th>Flight Number</th><th>Departure</th><th>Arrival</th></tr>
+        {% for flight in flights %}
+        <tr>
+            <td>{{ flight.airline_name }}</td>
+            <td>{{ flight.flight_num }}</td>
+            <td>{{ flight.departure_time }} from {{ flight.departure_airport }}</td>
+            <td>{{ flight.arrival_time }} to {{ flight.arrival_airport }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <p><a href="{{ url_for('home') }}">Back to Home</a></p>
+</body>
+</html>
