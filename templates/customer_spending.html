@@ -1,0 +1,95 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script>{% extends "base.html" %}
+{% block title %}Track My Spending{% endblock %}
+{% block content %}
+<div>
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">Track My Spending</h1>
+    <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div>
+            <label for="start_date" class="block text-sm font-medium">Start Date</label>
+            <input type="date" id="start_date" name="start_date" required class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+            <label for="end_date" class="block text-sm font-medium">End Date</label>
+            <input type="date" id="end_date" name="end_date" required class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="col-span-1 md:col-span-2">
+            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">View Spending</button>
+        </div>
+    </form>
+    <h2 class="text-xl font-semibold text-gray-800 mb-4">Total Spending: ${{ total_spent }}</h2>
+    <h3 class="text-lg font-semibold text-gray-800 mb-2">Monthly Spending (Last 6 Months)</h3>
+    <div class="space-y-2">
+        {% for month in monthly_spending %}
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <p>{{ month['month'] }}: ${{ month['spent'] }}</p>
+            </div>
+        {% endfor %}
+    </div>
+    <!-- Placeholder for bar chart -->
+    <canvas id="spending_chart" class="mt-6"></canvas>
+    <!-- Uncomment to enable Chart.js -->
+    <!--
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('spending_chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [{% for month in monthly_spending %}'{{ month['month'] }}',{% endfor %}],
+                datasets: [{
+                    label: 'Spending ($)',
+                    data: [{% for month in monthly_spending %}{{ month['spent'] }},{% endfor %}],
+                    backgroundColor: '#4299e1',
+                    borderColor: '#2b6cb0',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    </script>
+    -->
+</div>
+{% endblock %}

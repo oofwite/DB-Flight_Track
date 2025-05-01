@@ -38,25 +38,10 @@
         return gk_fileData[filename] || "";
         }
         </script>{% extends "base.html" %}
-{% block title %}Airline Staff Dashboard{% endblock %}
+{% block title %}My Flights{% endblock %}
 {% block content %}
 <div>
-    <h1 class="text-2xl font-bold text-gray-800 mb-4">Airline Staff Dashboard</h1>
-    <p class="text-gray-600 mb-4">Welcome, {{ staff['first_name'] }} {{ staff['last_name'] }} (Username: {{ staff['username'] }})</p>
-    <nav class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <a href="{{ url_for('create_flight') }}" class="text-blue-500 hover:underline">Create New Flight</a>
-        <a href="{{ url_for('change_status') }}" class="text-blue-500 hover:underline">Change Flight Status</a>
-        <a href="{{ url_for('add_airplane') }}" class="text-blue-500 hover:underline">Add Airplane</a>
-        <a href="{{ url_for('add_airport') }}" class="text-blue-500 hover:underline">Add Airport</a>
-        <a href="{{ url_for('view_booking_agents') }}" class="text-blue-500 hover:underline">View Booking Agents</a>
-        <a href="{{ url_for('view_frequent_customers') }}" class="text-blue-500 hover:underline">View Frequent Customers</a>
-        <a href="{{ url_for('view_reports') }}" class="text-blue-500 hover:underline">View Reports</a>
-        <a href="{{ url_for('compare_revenue') }}" class="text-blue-500 hover:underline">Compare Revenue</a>
-        <a href="{{ url_for('view_top_destinations') }}" class="text-blue-500 hover:underline">View Top Destinations</a>
-        <a href="{{ url_for('grant_permission') }}" class="text-blue-500 hover:underline">Grant Permission</a>
-        <a href="{{ url_for('add_booking_agent') }}" class="text-blue-500 hover:underline">Add Booking Agent</a>
-    </nav>
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">Upcoming Flights (Next 30 Days)</h2>
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">My Flights (Booked for Customers)</h1>
     <div class="space-y-4">
         {% for flight in flights %}
             <div class="bg-white p-4 rounded-lg shadow-md">

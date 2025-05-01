@@ -38,29 +38,27 @@
         return gk_fileData[filename] || "";
         }
         </script>{% extends "base.html" %}
-{% block title %}Customer Dashboard{% endblock %}
+{% block title %}Grant Permission{% endblock %}
 {% block content %}
-<div>
-    <h1 class="text-2xl font-bold text-gray-800 mb-4">Customer Dashboard</h1>
-    <p class="text-gray-600 mb-4">Welcome, {{ customer['name'] }} (Email: {{ customer['email'] }})</p>
-    <nav class="flex space-x-4 mb-6">
-        <a href="{{ url_for('customer_flights') }}" class="text-blue-500 hover:underline">View My Flights</a>
-        <a href="{{ url_for('customer_spending') }}" class="text-blue-500 hover:underline">Track My Spending</a>
-    </nav>
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">Available Flights</h2>
-    <div class="space-y-4">
-        {% for flight in flights %}
-            <div class="bg-white p-4 rounded-lg shadow-md flex justify-between items-center">
-                <div>
-                    <p class="text-lg font-semibold">{{ flight['airline_name'] }} Flight #{{ flight['flight_num'] }}</p>
-                    <p class="text-gray-600">{{ flight['departure_airport'] }} to {{ flight['arrival_airport'] }} at {{ flight['departure_time'] }}</p>
-                    <p class="text-gray-600">Price: ${{ flight['price'] }}</p>
-                </div>
-                <form method="POST" action="{{ url_for('purchase_ticket', airline_name=flight['airline_name'], flight_num=flight['flight_num']) }}">
-                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition">Purchase</button>
-                </form>
-            </div>
-        {% endfor %}
-    </div>
+<div class="max-w-md mx-auto">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">Grant Permission</h1>
+    <form method="POST" class="space-y-4">
+        <div>
+            <label for="username" class="block text-sm font-medium">Staff Username</label>
+            <select id="username" name="username" required class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500">
+                {% for s in staff %}
+                    <option value="{{ s['username'] }}">{{ s['username'] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="permission_type" class="block text-sm font-medium">Permission Type</label>
+            <select id="permission_type" name="permission_type" required class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500">
+                <option value="Admin">Admin</option>
+                <option value="Operator">Operator</option>
+            </select>
+        </div>
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">Grant Permission</button>
+    </form>
 </div>
 {% endblock %}
