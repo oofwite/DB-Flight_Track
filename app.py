@@ -96,7 +96,7 @@ def register_customer():
             INSERT INTO customer (email, name, password, building_number, street, city, state, phone_number, passport_number, passport_expiration, passport_country, date_of_birth)
             VALUES (%s, %s, MD5(%s), %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        cursor.execute(query, (email, password, name, building_number, street, city, state, phone_number, passport_number, passport_expiration, passport_country, date_of_birth))
+        cursor.execute(query, (email, name, password, building_number, street, city, state, phone_number, passport_number, passport_expiration, passport_country, date_of_birth))
         conn.commit()
         cursor.close()
         conn.close()
