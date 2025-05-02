@@ -65,6 +65,20 @@ def register_customer():
         date_of_birth = request.form['date_of_birth']
         conn = get_db_connection()
         cursor = conn.cursor()
+        # Check if email already exists
+        cursor.execute("SELECT email FROM customer WHERE email = %s", (email,))
+        if cursor.fetchone():
+            flash('Email already registered. Please use a different email or log in.', 'error')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('register_customer'))
+        # Check if passport number already exists
+        cursor.execute("SELECT passport_number FROM customer WHERE passport_number = %s", (passport_number,))
+        if cursor.fetchone():
+            flash('Passport number already registered. Please use a different passport number.', 'error')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('register_customer'))
         query = """
             INSERT INTO customer (email, name, password, building_number, street, city, state, phone_number, passport_number, passport_expiration, passport_country, date_of_birth)
             VALUES (%s, MD5(%s), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -138,7 +152,9 @@ def login():
             return redirect(url_for('customer_dashboard'))
 
         # Booking Agent login
-        cursor.execute("SELECT email FROM booking_agent WHERE email = %s AND password = MD5(%s)", (identifier, password))
+        query = "SELECT email FROM booking_agent WHERE LOWER(email) = LOWER(%s) AND password = MD5(%s)"
+        print(f"Booking agent login query: {query}")
+        cursor.execute(query, (identifier, password))
         agent = cursor.fetchone()
         if agent:
             session['user_type'] = 'booking_agent'
