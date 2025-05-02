@@ -42,6 +42,19 @@ def has_permission(username, permission_type):
     conn.close()
     return result is not None
 
+# Context processor to dynamically set the home URL
+@app.context_processor
+def inject_home_url():
+    home_url = url_for('home')
+    if 'user_type' in session:
+        if session['user_type'] == 'customer':
+            home_url = url_for('customer_dashboard')
+        elif session['user_type'] == 'booking_agent':
+            home_url = url_for('booking_agent_dashboard')
+        elif session['user_type'] == 'airline_staff':
+            home_url = url_for('airline_staff_dashboard')
+    return dict(home_url=home_url)
+
 # Home Route
 @app.route('/')
 def home():
@@ -81,7 +94,7 @@ def register_customer():
             return redirect(url_for('register_customer'))
         query = """
             INSERT INTO customer (email, name, password, building_number, street, city, state, phone_number, passport_number, passport_expiration, passport_country, date_of_birth)
-            VALUES (%s, MD5(%s), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, MD5(%s), %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         cursor.execute(query, (email, password, name, building_number, street, city, state, phone_number, passport_number, passport_expiration, passport_country, date_of_birth))
         conn.commit()
@@ -99,6 +112,20 @@ def register_booking_agent():
         booking_agent_id = request.form['booking_agent_id']
         conn = get_db_connection()
         cursor = conn.cursor()
+        # Check if email already exists
+        cursor.execute("SELECT email FROM booking_agent WHERE email = %s", (email,))
+        if cursor.fetchone():
+            flash('Email already registered. Please use a different email or log in.', 'error')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('register_booking_agent'))
+        # Check if booking_agent_id already exists
+        cursor.execute("SELECT booking_agent_id FROM booking_agent WHERE booking_agent_id = %s", (booking_agent_id,))
+        if cursor.fetchone():
+            flash('Booking Agent ID already exists. Please use a different ID.', 'error')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('register_booking_agent'))
         query = "INSERT INTO booking_agent (email, password, booking_agent_id) VALUES (%s, MD5(%s), %s)"
         cursor.execute(query, (email, password, booking_agent_id))
         conn.commit()
@@ -119,6 +146,13 @@ def register_airline_staff():
         airline_name = request.form['airline_name']
         conn = get_db_connection()
         cursor = conn.cursor()
+        # Check if username already exists
+        cursor.execute("SELECT username FROM airline_staff WHERE username = %s", (username,))
+        if cursor.fetchone():
+            flash('Username already taken. Please choose a different username.', 'error')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('register_airline_staff'))
         query = """
             INSERT INTO airline_staff (username, password, first_name, last_name, date_of_birth, airline_name)
             VALUES (%s, MD5(%s), %s, %s, %s, %s)
@@ -135,13 +169,16 @@ def register_airline_staff():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        identifier = request.form['email_or_username']
+        identifier = request.form['email_or_username'].lower()  # Normalize to lowercase
         password = request.form['password']
         conn = get_db_connection()
         cursor = conn.cursor()
 
         # Customer login
-        cursor.execute("SELECT email FROM customer WHERE email = %s AND password = MD5(%s)", (identifier, password))
+        query = "SELECT email FROM customer WHERE LOWER(email) = LOWER(%s) AND password = MD5(%s)"
+        print(f"Customer login query: {query}")
+        print(f"Parameters: {identifier}, {password}")
+        cursor.execute(query, (identifier, password))
         customer = cursor.fetchone()
         if customer:
             session['user_type'] = 'customer'

@@ -1,27 +1,27 @@
 /* Tailwind CSS CDN */
 @import url('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css');
 
-/* Custom Styles for Dropdown and Components */
+/* Custom Styles for Dropdown and Components with NYU Color Theme */
 body {
     font-family: 'Inter', sans-serif;
-    background-color: #f7fafc;
-    color: #2d3748;
+    background-color: #f5f3f6; /* NYU Light Purple/Gray Background */
+    color: #57007E; /* NYU Primary Purple */
 }
 
 nav {
-    background-color: #1a202c;
+    background-color: #57007E; /* NYU Primary Purple */
     padding: 1rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 nav a {
-    color: #e2e8f0;
+    color: #FFFFFF; /* White for contrast */
     padding: 0.5rem 1rem;
     transition: background-color 0.3s ease;
 }
 
 nav a:hover {
-    background-color: #2d3748;
+    background-color: #4B006B; /* Darker NYU Purple */
     border-radius: 0.25rem;
 }
 
@@ -34,7 +34,7 @@ nav a:hover {
 .dropdown-content {
     display: none;
     position: absolute;
-    background-color: #2d3748;
+    background-color: #7A1EA1; /* NYU Secondary Purple */
     min-width: 160px;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
     z-index: 10;
@@ -44,14 +44,14 @@ nav a:hover {
 }
 
 .dropdown-content a {
-    color: #e2e8f0;
+    color: #FFFFFF; /* White for contrast */
     padding: 0.75rem 1rem;
     display: block;
     transition: background-color 0.3s ease;
 }
 
 .dropdown-content a:hover {
-    background-color: #4a5568;
+    background-color: #4B006B; /* Darker NYU Purple */
 }
 
 .dropdown:hover .dropdown-content {
@@ -67,13 +67,13 @@ nav a:hover {
 }
 
 .alert-success {
-    background-color: #d4edda;
+    background-color: #D4EDDA; /* Keep as is for success green */
     color: #155724;
 }
 
 .alert-error {
-    background-color: #f8d7da;
-    color: #721c24;
+    background-color: #F8D7DA; /* Keep as is for error red */
+    color: #721C24;
 }
 
 /* Forms */
@@ -81,7 +81,7 @@ form {
     max-width: 500px;
     margin: 2rem auto;
     padding: 1.5rem;
-    background-color: #fff;
+    background-color: #FFFFFF;
     border-radius: 0.5rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
@@ -90,27 +90,27 @@ form label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 600;
-    color: #2d3748;
+    color: #2D3748;
 }
 
 form input, form select {
     width: 100%;
     padding: 0.75rem;
     margin-bottom: 1rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #E2E8F0;
     border-radius: 0.375rem;
     transition: border-color 0.3s ease;
 }
 
 form input:focus, form select:focus {
     outline: none;
-    border-color: #4299e1;
-    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+    border-color: #7A1EA1; /* NYU Secondary Purple */
+    box-shadow: 0 0 ###### 3px rgba(122, 30, 161, 0.1);
 }
 
 form button {
-    background-color: #4299e1;
-    color: #fff;
+    background-color: #57007E; /* NYU Primary Purple */
+    color: #FFFFFF;
     padding: 0.75rem 1.5rem;
     border: none;
     border-radius: 0.375rem;
@@ -120,7 +120,7 @@ form button {
 }
 
 form button:hover {
-    background-color: #2b6cb0;
+    background-color: #4B006B; /* Darker NYU Purple */
 }
 
 /* Lists and Tables */
@@ -130,7 +130,7 @@ ul {
 }
 
 ul li {
-    background-color: #fff;
+    background-color: #FFFFFF;
     padding: 1rem;
     margin-bottom: 0.5rem;
     border-radius: 0.375rem;
@@ -141,8 +141,8 @@ ul li {
 footer {
     text-align: center;
     padding: 1rem;
-    background-color: #1a202c;
-    color: #e2e8f0;
+    background-color: #57007E; /* NYU Primary Purple */
+    color: #FFFFFF; /* White for contrast */
     position: relative;
     bottom: 0;
     width: 100%;

@@ -1,83 +1,99 @@
 <script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
+    var gk_isXlsx = false;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+    function filledCell(cell) {
+      return cell !== '' && cell != null;
+    }
+    function loadFileData(filename) {
+    if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+        try {
+            var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+            var firstSheetName = workbook.SheetNames[0];
+            var worksheet = workbook.Sheets[firstSheetName];
 
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
+            // Convert sheet to JSON to filter blank rows
+            var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+            // Filter out blank rows (rows where all cells are empty, null, or undefined)
+            var filteredData = jsonData.filter(row => row.some(filledCell));
 
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
+            // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+            var headerRowIndex = filteredData.findIndex((row, index) =>
+              row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+            );
+            // Fallback
+            if (headerRowIndex === -1 || headerRowIndex > 25) {
+              headerRowIndex = 0;
             }
+
+            // Convert filtered JSON back to CSV
+            var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+            csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+            return csv;
+        } catch (e) {
+            console.error(e);
+            return "";
         }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+    }
+    return gk_fileData[filename] || "";
+    }
+    </script><!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Air Ticket Reservation System{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Air Ticket Reservation System{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="min-h-screen flex flex-col">
-    <nav class="flex justify-center">
-        <div class="flex space-x-4">
-            <a href="{{ url_for('home') }}" class="px-3 py-2 rounded-md hover:bg-gray-700">Home</a>
-            <a href="{{ url_for('search_flights') }}" class="px-3 py-2 rounded-md hover:bg-gray-700">Search Flights</a>
-            <a href="{{ url_for('flight_status') }}" class="px-3 py-2 rounded-md hover:bg-gray-700">Flight Status</a>
-            {% if session.user_type %}
-                <a href="{{ url_for('logout') }}" class="px-3 py-2 rounded-md hover:bg-gray-700">Logout</a>
-            {% else %}
-                <a href="{{ url_for('login') }}" class="px-3 py-2 rounded-md hover:bg-gray-700">Login</a>
-                <div class="dropdown">
-                    <a href="#" class="px-3 py-2 rounded-md hover:bg-gray-700">Register</a>
-                    <div class="dropdown-content">
-                        <a href="{{ url_for('register_customer') }}">Customer</a>
-                        <a href="{{ url_for('register_booking_agent') }}">Booking Agent</a>
-                        <a href="{{ url_for('register_airline_staff') }}">Airline Staff</a>
-                    </div>
+<nav class="flex justify-center">
+    <div class="flex space-x-4 items-center"> <!-- Added items-center for vertical alignment -->
+        <a href="{{ home_url }}" class="px-3 py-2 rounded-md hover:bg-gray-700">Home</a>
+        <a href="{{ url_for('search_flights') }}" class="px-3 py-2 rounded-md hover:bg-gray-700">Search Flights</a>
+        <a href="{{ url_for('flight_status') }}" class="px-3 py-2 rounded-md hover:bg-gray-700">Flight Status</a>
+        {% if session.user_type %}
+            <a href="{{ url_for('logout') }}" class="px-3 py-2 rounded-md hover:bg-gray-700">Logout</a>
+        {% else %}
+            <a href="{{ url_for('login') }}" class="px-3 py-2 rounded-md hover:bg-gray-700">Login</a>
+            <div class="dropdown relative"> <!-- Added relative positioning context -->
+                <a href="#" class="px-3 py-2 rounded-md hover:bg-gray-700">Register</a>
+                <!-- Added absolute positioning and basic styling for dropdown -->
+                <div class="dropdown-content hidden absolute bg-white shadow-md mt-1 rounded z-10">
+                    <a href="{{ url_for('register_customer') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Customer</a>
+                    <a href="{{ url_for('register_booking_agent') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Booking Agent</a>
+                    <a href="{{ url_for('register_airline_staff') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Airline Staff</a>
                 </div>
-            {% endif %}
-        </div>
-    </nav>
-    <div class="flex-grow container mx-auto px-4 py-8">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        {% block content %}{% endblock %}
+            </div>
+        {% endif %}
     </div>
-    <footer class="mt-auto">
-        <p>© 2025 Air Ticket Reservation System</p>
-    </footer>
-</body>
+</nav>
+<div class="flex-grow container mx-auto px-4 py-8">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+</div>
+<footer class="mt-auto text-center py-4">
+    <p>Designed by Jiayi Yang and Yifang Chen</p>
+</footer>
+<!-- Simple script to toggle dropdown visibility on hover -->
+<script>
+    document.querySelectorAll('.dropdown').forEach(item => {
+        const trigger = item.querySelector('a'); // Assuming the first 'a' is the trigger
+        const content = item.querySelector('.dropdown-content');
+        if (trigger && content) {
+            item.addEventListener('mouseenter', () => {
+                content.classList.remove('hidden');
+            });
+            item.addEventListener('mouseleave', () => {
+                content.classList.add('hidden');
+            });
+        }
+    });
+</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'939839b18f2fadb2',t:'MTc0NjE5NjMxOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
