@@ -146,24 +146,44 @@ def register_airline_staff():
         airline_name = request.form['airline_name']
         conn = get_db_connection()
         cursor = conn.cursor()
-        # Check if username already exists
-        cursor.execute("SELECT username FROM airline_staff WHERE username = %s", (username,))
-        if cursor.fetchone():
-            flash('Username already taken. Please choose a different username.', 'error')
+        try:
+            # Check if username already exists
+            cursor.execute("SELECT username FROM airline_staff WHERE username = %s", (username,))
+            if cursor.fetchone():
+                flash('Username already taken. Please choose a different username.', 'error')
+                return redirect(url_for('register_airline_staff'))
+
+            # Insert into airline_staff table
+            staff_query = """
+                INSERT INTO airline_staff (username, password, first_name, last_name, date_of_birth, airline_name)
+                VALUES (%s, MD5(%s), %s, %s, %s, %s)
+            """
+            cursor.execute(staff_query, (username, password, first_name, last_name, date_of_birth, airline_name))
+
+            # Grant default 'Operator' permission
+            permission_query = "INSERT INTO permission (username, permission_type) VALUES (%s, %s)"
+            cursor.execute(permission_query, (username, 'Operator')) # Default permission
+
+            conn.commit()
+            flash('Registration successful! Please log in.', 'success')
+            return redirect(url_for('login'))
+        except pymysql.MySQLError as e:
+            conn.rollback() # Rollback in case of error
+            flash(f'Database error: {e}', 'error')
+            return redirect(url_for('register_airline_staff'))
+        finally:
             cursor.close()
             conn.close()
-            return redirect(url_for('register_airline_staff'))
-        query = """
-            INSERT INTO airline_staff (username, password, first_name, last_name, date_of_birth, airline_name)
-            VALUES (%s, MD5(%s), %s, %s, %s, %s)
-        """
-        cursor.execute(query, (username, password, first_name, last_name, date_of_birth, airline_name))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        flash('Registration successful! Please log in.', 'success')
-        return redirect(url_for('login'))
-    return render_template('register_airline_staff.html')
+
+    # GET request: Render the registration form
+    # Fetch airlines for the dropdown
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT airline_name FROM airline")
+    airlines = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template('register_airline_staff.html', airlines=airlines)
 
 # Login Route
 @app.route('/login', methods=['GET', 'POST'])
@@ -262,23 +282,29 @@ def customer_flights():
         JOIN purchases p ON t.ticket_id = p.ticket_id
         WHERE p.customer_email = %s AND f.departure_time >= NOW()
     """
+    # Initialize parameters list with the mandatory email parameter
+    params = [session['email']]
+
     if request.method == 'POST':
         start_date = request.form.get('start_date')
         end_date = request.form.get('end_date')
         source = request.form.get('source')
         destination = request.form.get('destination')
+
+        # Append additional conditions and parameters if provided
         if start_date and end_date:
+            # This condition is added alongside the >= NOW() condition
             query += " AND f.departure_time BETWEEN %s AND %s"
-            params = (session['email'], start_date, end_date)
+            params.extend([start_date, end_date])
         if source:
             query += " AND f.departure_airport = %s"
-            params += (source,)
+            params.append(source)
         if destination:
             query += " AND f.arrival_airport = %s"
-            params += (destination,)
-        cursor.execute(query, params)
-    else:
-        cursor.execute(query, (session['email'],))
+            params.append(destination)
+
+    # Execute the query with the final set of parameters (works for both GET and POST)
+    cursor.execute(query, tuple(params)) # pymysql requires tuple for parameters
     flights = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -488,31 +514,50 @@ def create_flight():
         return redirect(url_for('airline_staff_dashboard'))
     conn = get_db_connection()
     cursor = conn.cursor()
-    if request.method == 'POST':
-        flight_num = request.form['flight_num']
-        departure_airport = request.form['departure_airport']
-        departure_time = request.form['departure_time']
-        arrival_airport = request.form['arrival_airport']
-        arrival_time = request.form['arrival_time']
-        price = request.form['price']
-        status = request.form['status']
-        airplane_id = request.form['airplane_id']
-        cursor.execute("""
-            INSERT INTO flight (airline_name, flight_num, departure_airport, departure_time, arrival_airport, arrival_time, price, status, airplane_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (session['airline_name'], flight_num, departure_airport, departure_time, arrival_airport, arrival_time, price, status, airplane_id))
-        conn.commit()
-        flash('Flight created successfully!', 'success')
-        cursor.close()
-        conn.close()
-        return redirect(url_for('airline_staff_dashboard'))
-    cursor.execute("SELECT airport_name FROM airport")
-    airports = cursor.fetchall()
-    cursor.execute("SELECT airplane_id FROM airplane WHERE airline_name = %s", (session['airline_name'],))
-    airplanes = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return render_template('airline_staff_create_flight.html', airports=airports, airplanes=airplanes)
+    try:
+        if request.method == 'POST':
+            airline_name = session['airline_name']
+            flight_num = request.form['flight_num']
+            departure_airport = request.form['departure_airport']
+            departure_time = request.form['departure_time']
+            arrival_airport = request.form['arrival_airport']
+            arrival_time = request.form['arrival_time']
+            price = request.form['price']
+            status = request.form['status']
+            airplane_id = request.form['airplane_id']
+
+            # Check if flight already exists
+            cursor.execute("SELECT 1 FROM flight WHERE airline_name = %s AND flight_num = %s", (airline_name, flight_num))
+            if cursor.fetchone():
+                flash(f'Flight {airline_name} {flight_num} already exists.', 'error')
+            else:
+                cursor.execute("""
+                    INSERT INTO flight (airline_name, flight_num, departure_airport, departure_time, arrival_airport, arrival_time, price, status, airplane_id)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (airline_name, flight_num, departure_airport, departure_time, arrival_airport, arrival_time, price, status, airplane_id))
+                conn.commit()
+                flash('Flight created successfully!', 'success')
+                return redirect(url_for('airline_staff_dashboard'))
+
+        # GET request or if insertion failed
+        cursor.execute("SELECT airport_name FROM airport")
+        airports = cursor.fetchall()
+        cursor.execute("SELECT airplane_id FROM airplane WHERE airline_name = %s", (session['airline_name'],))
+        airplanes = cursor.fetchall()
+        return render_template('airline_staff_create_flight.html', airports=airports, airplanes=airplanes)
+
+    except pymysql.MySQLError as e:
+        conn.rollback()
+        flash(f'Database error: {e}', 'error')
+        # Re-fetch data for the form if needed after error
+        cursor.execute("SELECT airport_name FROM airport")
+        airports = cursor.fetchall()
+        cursor.execute("SELECT airplane_id FROM airplane WHERE airline_name = %s", (session['airline_name'],))
+        airplanes = cursor.fetchall()
+        return render_template('airline_staff_create_flight.html', airports=airports, airplanes=airplanes)
+    finally:
+        if cursor: cursor.close()
+        # Rely on teardown context for connection closing
 
 # Airline Staff Change Flight Status
 @app.route('/airline_staff/change_status', methods=['GET', 'POST'])
@@ -546,20 +591,41 @@ def add_airplane():
         return redirect(url_for('airline_staff_dashboard'))
     conn = get_db_connection()
     cursor = conn.cursor()
-    if request.method == 'POST':
-        airplane_id = request.form['airplane_id']
-        seats = request.form['seats']
-        cursor.execute("INSERT INTO airplane (airline_name, airplane_id, seats) VALUES (%s, %s, %s)", (session['airline_name'], airplane_id, seats))
-        conn.commit()
+    airplanes = [] # Initialize airplanes list
+    try:
+        if request.method == 'POST':
+            airline_name = session['airline_name']
+            airplane_id = request.form['airplane_id']
+            seats = request.form['seats']
+
+            # Check if airplane already exists for this airline
+            cursor.execute("SELECT 1 FROM airplane WHERE airline_name = %s AND airplane_id = %s", (airline_name, airplane_id))
+            if cursor.fetchone():
+                flash(f'Airplane ID {airplane_id} already exists for {airline_name}.', 'error')
+            else:
+                cursor.execute("INSERT INTO airplane (airline_name, airplane_id, seats) VALUES (%s, %s, %s)", (airline_name, airplane_id, seats))
+                conn.commit()
+                flash('Airplane added successfully!', 'success')
+                # Refresh the list after adding
+                cursor.execute("SELECT * FROM airplane WHERE airline_name = %s", (airline_name,))
+                airplanes = cursor.fetchall()
+                return render_template('airline_staff_add_airplane.html', airplanes=airplanes, added=True) # Stay on page, show updated list
+
+        # GET request or if POST failed validation
         cursor.execute("SELECT * FROM airplane WHERE airline_name = %s", (session['airline_name'],))
         airplanes = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        flash('Airplane added successfully!', 'success')
-        return render_template('airline_staff_add_airplane.html', airplanes=airplanes, added=True)
-    cursor.close()
-    conn.close()
-    return render_template('airline_staff_add_airplane.html')
+        return render_template('airline_staff_add_airplane.html', airplanes=airplanes)
+
+    except pymysql.MySQLError as e:
+        conn.rollback()
+        flash(f'Database error: {e}', 'error')
+        # Re-fetch airplanes in case of error during POST
+        cursor.execute("SELECT * FROM airplane WHERE airline_name = %s", (session['airline_name'],))
+        airplanes = cursor.fetchall()
+        return render_template('airline_staff_add_airplane.html', airplanes=airplanes)
+    finally:
+        if cursor: cursor.close()
+        # Rely on teardown context for connection closing
 
 # Airline Staff Add Airport
 @app.route('/airline_staff/add_airport', methods=['GET', 'POST'])
@@ -572,12 +638,28 @@ def add_airport():
         cursor = conn.cursor()
         airport_name = request.form['airport_name']
         airport_city = request.form['airport_city']
-        cursor.execute("INSERT INTO airport (airport_name, airport_city) VALUES (%s, %s)", (airport_name, airport_city))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        flash('Airport added successfully!', 'success')
-        return redirect(url_for('airline_staff_dashboard'))
+        try:
+            # Check if airport already exists
+            cursor.execute("SELECT airport_name FROM airport WHERE airport_name = %s", (airport_name,))
+            if cursor.fetchone():
+                flash(f'Airport "{airport_name}" already exists.', 'error')
+            else:
+                # Insert new airport
+                cursor.execute("INSERT INTO airport (airport_name, airport_city) VALUES (%s, %s)", (airport_name, airport_city))
+                conn.commit()
+                flash('Airport added successfully!', 'success')
+                return redirect(url_for('airline_staff_dashboard'))
+        except pymysql.MySQLError as e:
+            conn.rollback()
+            flash(f'Database error: {e}', 'error')
+        finally:
+            cursor.close()
+            # Rely on teardown_appcontext to close connection
+            # conn.close() # Optional: close immediately if not using teardown context reliably
+        # If insertion failed or airport existed, render the form again
+        return render_template('airline_staff_add_airport.html')
+
+    # GET request
     return render_template('airline_staff_add_airport.html')
 
 # Airline Staff View Booking Agents
@@ -756,26 +838,42 @@ def grant_permission():
         return redirect(url_for('airline_staff_dashboard'))
     conn = get_db_connection()
     cursor = conn.cursor()
-    if request.method == 'POST':
-        username = request.form['username']
-        permission_type = request.form['permission_type']
-        cursor.execute("SELECT * FROM airline_staff WHERE username = %s AND airline_name = %s", (username, session['airline_name']))
-        if not cursor.fetchone():
-            flash('Staff not found or not in your airline.', 'error')
-            cursor.close()
-            conn.close()
-            return redirect(url_for('grant_permission'))
-        cursor.execute("INSERT INTO permission (username, permission_type) VALUES (%s, %s)", (username, permission_type))
-        conn.commit()
-        flash('Permission granted successfully!', 'success')
-        cursor.close()
-        conn.close()
-        return redirect(url_for('airline_staff_dashboard'))
-    cursor.execute("SELECT username FROM airline_staff WHERE airline_name = %s", (session['airline_name'],))
-    staff = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return render_template('airline_staff_grant_permission.html', staff=staff)
+    staff = [] # Initialize staff list
+    try:
+        if request.method == 'POST':
+            username = request.form['username']
+            permission_type = request.form['permission_type']
+
+            # Verify staff exists in the current airline
+            cursor.execute("SELECT 1 FROM airline_staff WHERE username = %s AND airline_name = %s", (username, session['airline_name']))
+            if not cursor.fetchone():
+                flash('Staff not found or not in your airline.', 'error')
+            else:
+                # Check if permission already exists
+                cursor.execute("SELECT 1 FROM permission WHERE username = %s AND permission_type = %s", (username, permission_type))
+                if cursor.fetchone():
+                    flash(f'User {username} already has {permission_type} permission.', 'error')
+                else:
+                    cursor.execute("INSERT INTO permission (username, permission_type) VALUES (%s, %s)", (username, permission_type))
+                    conn.commit()
+                    flash('Permission granted successfully!', 'success')
+                    return redirect(url_for('airline_staff_dashboard')) # Redirect on success
+
+        # GET request or if POST failed validation/duplicate check
+        cursor.execute("SELECT username FROM airline_staff WHERE airline_name = %s", (session['airline_name'],))
+        staff = cursor.fetchall()
+        return render_template('airline_staff_grant_permission.html', staff=staff)
+
+    except pymysql.MySQLError as e:
+        conn.rollback()
+        flash(f'Database error: {e}', 'error')
+        # Re-fetch staff list in case of error during POST
+        cursor.execute("SELECT username FROM airline_staff WHERE airline_name = %s", (session['airline_name'],))
+        staff = cursor.fetchall()
+        return render_template('airline_staff_grant_permission.html', staff=staff)
+    finally:
+        if cursor: cursor.close()
+        # Rely on teardown context for connection closing
 
 # Airline Staff Add Booking Agent
 @app.route('/airline_staff/add_booking_agent', methods=['GET', 'POST'])
@@ -783,23 +881,38 @@ def add_booking_agent():
     if 'user_type' not in session or session['user_type'] != 'airline_staff' or not has_permission(session['username'], 'Admin'):
         flash('Unauthorized access.', 'error')
         return redirect(url_for('airline_staff_dashboard'))
-    if request.method == 'POST':
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        email = request.form['email']
-        cursor.execute("SELECT * FROM booking_agent WHERE email = %s", (email,))
-        if not cursor.fetchone():
-            flash('Booking agent not found.', 'error')
-            cursor.close()
-            conn.close()
-            return redirect(url_for('add_booking_agent'))
-        cursor.execute("INSERT INTO booking_agent_work_for (email, airline_name) VALUES (%s, %s)", (email, session['airline_name']))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        flash('Booking agent added successfully!', 'success')
-        return redirect(url_for('airline_staff_dashboard'))
-    return render_template('airline_staff_add_booking_agent.html')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        if request.method == 'POST':
+            email = request.form['email']
+            airline_name = session['airline_name']
+
+            # Check if booking agent exists
+            cursor.execute("SELECT 1 FROM booking_agent WHERE email = %s", (email,))
+            if not cursor.fetchone():
+                flash('Booking agent email not found.', 'error')
+            else:
+                # Check if association already exists
+                cursor.execute("SELECT 1 FROM booking_agent_work_for WHERE email = %s AND airline_name = %s", (email, airline_name))
+                if cursor.fetchone():
+                    flash(f'Booking agent {email} already works for {airline_name}.', 'error')
+                else:
+                    cursor.execute("INSERT INTO booking_agent_work_for (email, airline_name) VALUES (%s, %s)", (email, airline_name))
+                    conn.commit()
+                    flash('Booking agent added successfully!', 'success')
+                    return redirect(url_for('airline_staff_dashboard')) # Redirect on success
+
+        # GET request or if POST failed validation/duplicate check
+        return render_template('airline_staff_add_booking_agent.html')
+
+    except pymysql.MySQLError as e:
+        conn.rollback()
+        flash(f'Database error: {e}', 'error')
+        return render_template('airline_staff_add_booking_agent.html') # Show form again on error
+    finally:
+        if cursor: cursor.close()
+        # Rely on teardown context for connection closing
 
 # Search Flights
 @app.route('/search_flights', methods=['GET', 'POST'])
@@ -843,33 +956,51 @@ def purchase_ticket(airline_name, flight_num):
     customer_email = session['email']
     conn = get_db_connection()
     cursor = conn.cursor()
-    # Check seat availability
-    query_flight = """
-        SELECT f.airline_name, f.flight_num, a.seats 
-        FROM flight f 
-        JOIN airplane a ON f.airline_name = a.airline_name AND f.airplane_id = a.airplane_id 
-        WHERE f.airline_name = %s AND f.flight_num = %s
-    """
-    cursor.execute(query_flight, (airline_name, flight_num))
-    flight = cursor.fetchone()
-    if not flight:
-        flash('Flight not found!', 'error')
+    try:
+        # Check if customer already has a ticket for this flight
+        query_existing_ticket = """
+            SELECT 1 FROM purchases p
+            JOIN ticket t ON p.ticket_id = t.ticket_id
+            WHERE p.customer_email = %s AND t.airline_name = %s AND t.flight_num = %s
+        """
+        cursor.execute(query_existing_ticket, (customer_email, airline_name, flight_num))
+        if cursor.fetchone():
+            flash('You already have a ticket for this flight.', 'error')
+            return redirect(url_for('customer_dashboard'))
+
+        # Check seat availability
+        query_flight = """
+            SELECT f.airline_name, f.flight_num, a.seats
+            FROM flight f
+            JOIN airplane a ON f.airline_name = a.airline_name AND f.airplane_id = a.airplane_id
+            WHERE f.airline_name = %s AND f.flight_num = %s
+        """
+        cursor.execute(query_flight, (airline_name, flight_num))
+        flight = cursor.fetchone()
+        if not flight:
+            flash('Flight not found!', 'error')
+            return redirect(url_for('customer_dashboard'))
+
+        query_tickets = "SELECT COUNT(*) as ticket_count FROM ticket WHERE airline_name = %s AND flight_num = %s"
+        cursor.execute(query_tickets, (airline_name, flight_num))
+        ticket_count = cursor.fetchone()['ticket_count']
+
+        if ticket_count < flight['seats']:
+            ticket_id = str(uuid.uuid4())
+            cursor.execute("INSERT INTO ticket (ticket_id, airline_name, flight_num) VALUES (%s, %s, %s)", (ticket_id, airline_name, flight_num))
+            cursor.execute("INSERT INTO purchases (ticket_id, customer_email, purchase_date) VALUES (%s, %s, NOW())", (ticket_id, customer_email))
+            conn.commit()
+            flash('Ticket purchased successfully!', 'success')
+        else:
+            flash('No seats available!', 'error')
+
+    except pymysql.MySQLError as e:
+        conn.rollback()
+        flash(f'Database error: {e}', 'error')
+    finally:
         cursor.close()
-        conn.close()
-        return redirect(url_for('customer_dashboard'))
-    query_tickets = "SELECT COUNT(*) as ticket_count FROM ticket WHERE airline_name = %s AND flight_num = %s"
-    cursor.execute(query_tickets, (airline_name, flight_num))
-    ticket_count = cursor.fetchone()['ticket_count']
-    if ticket_count < flight['seats']:
-        ticket_id = str(uuid.uuid4())
-        cursor.execute("INSERT INTO ticket (ticket_id, airline_name, flight_num) VALUES (%s, %s, %s)", (ticket_id, airline_name, flight_num))
-        cursor.execute("INSERT INTO purchases (ticket_id, customer_email, purchase_date) VALUES (%s, %s, NOW())", (ticket_id, customer_email))
-        conn.commit()
-        flash('Ticket purchased successfully!', 'success')
-    else:
-        flash('No seats available!', 'error')
-    cursor.close()
-    conn.close()
+        # Rely on teardown context for connection closing
+
     return redirect(url_for('customer_dashboard'))
 
 # Public Flight Status
