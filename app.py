@@ -335,7 +335,7 @@ def customer_spending():
     total_spent = cursor.fetchone()['total_spent'] or 0
     # Monthly spending for bar chart (simplified)
     monthly_query = """
-        SELECT DATE_FORMAT(p.purchase_date, '%Y-%m') as month, SUM(f.price) as spent
+        SELECT DATE_FORMAT(p.purchase_date, '%%Y-%%m') as month, SUM(f.price) as spent
         FROM purchases p
         JOIN ticket t ON p.ticket_id = t.ticket_id
         JOIN flight f ON t.airline_name = f.airline_name AND t.flight_num = f.flight_num
@@ -424,6 +424,19 @@ def booking_agent_purchase():
         flight = cursor.fetchone()
         if not flight:
             flash('Flight not found!', 'error')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('booking_agent_dashboard'))
+
+        # Check if customer already has a ticket for this flight booked by this agent or any agent
+        query_existing_ticket = """
+            SELECT 1 FROM purchases p
+            JOIN ticket t ON p.ticket_id = t.ticket_id
+            WHERE p.customer_email = %s AND t.airline_name = %s AND t.flight_num = %s
+        """
+        cursor.execute(query_existing_ticket, (customer_email, airline_name, flight_num))
+        if cursor.fetchone():
+            flash(f'Customer {customer_email} already has a ticket for this flight.', 'error')
             cursor.close()
             conn.close()
             return redirect(url_for('booking_agent_dashboard'))
@@ -749,7 +762,7 @@ def view_reports():
     cursor.execute(query, (session['airline_name'], start_date, end_date))
     ticket_count = cursor.fetchone()['ticket_count']
     monthly_query = """
-        SELECT DATE_FORMAT(p.purchase_date, '%Y-%m') as month, COUNT(*) as tickets
+        SELECT DATE_FORMAT(p.purchase_date, '%%Y-%%m') as month, COUNT(*) as tickets
         FROM purchases p
         JOIN ticket t ON p.ticket_id = t.ticket_id
         JOIN flight f ON t.airline_name = f.airline_name AND t.flight_num = f.flight_num
