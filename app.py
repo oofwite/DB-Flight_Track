@@ -280,7 +280,7 @@ def customer_flights():
         SELECT f.* FROM flight f
         JOIN ticket t ON f.airline_name = t.airline_name AND f.flight_num = t.flight_num
         JOIN purchases p ON t.ticket_id = p.ticket_id
-        WHERE p.customer_email = %s AND f.departure_time >= NOW()
+        WHERE p.customer_email = %s AND f.departure_time >=  NOW()
     """
     # Initialize parameters list with the mandatory email parameter
     params = [session['email']]
