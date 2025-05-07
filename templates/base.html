@@ -47,7 +47,7 @@
 </head>
 <body class="min-h-screen flex flex-col">
 <nav class="flex justify-center">
-    <div class="flex space-x-4 items-center"> <!-- Added items-center for vertical alignment -->
+    <div class="flex space-x-4 items-center">
         <a href="{{ home_url }}" class="px-3 py-2 rounded-md hover:bg-gray-700">Home</a>
         <a href="{{ url_for('search_flights') }}" class="px-3 py-2 rounded-md hover:bg-gray-700">Search Flights</a>
         <a href="{{ url_for('flight_status') }}" class="px-3 py-2 rounded-md hover:bg-gray-700">Flight Status</a>
@@ -55,9 +55,8 @@
             <a href="{{ url_for('logout') }}" class="px-3 py-2 rounded-md hover:bg-gray-700">Logout</a>
         {% else %}
             <a href="{{ url_for('login') }}" class="px-3 py-2 rounded-md hover:bg-gray-700">Login</a>
-            <div class="dropdown relative"> <!-- Added relative positioning context -->
+            <div class="dropdown relative">
                 <a href="#" class="px-3 py-2 rounded-md hover:bg-gray-700">Register</a>
-                <!-- Added absolute positioning and basic styling for dropdown -->
                 <div class="dropdown-content hidden absolute bg-white shadow-md mt-1 rounded z-10">
                     <a href="{{ url_for('register_customer') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Customer</a>
                     <a href="{{ url_for('register_booking_agent') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Booking Agent</a>
