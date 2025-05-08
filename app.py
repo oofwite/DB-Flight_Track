@@ -22,8 +22,12 @@ DB_CONFIG = {
 
 google_bp = make_google_blueprint(
     client_id="517494029304-qefk3f2i948gb8hmhhp7nfvebof1jp4g.apps.googleusercontent.com",
-    client_secret="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",
-    scope=["profile", "email"],
+    client_secret="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", 
+    scope=[
+        "https://www.googleapis.com/auth/userinfo.profile",
+        "https://www.googleapis.com/auth/userinfo.email",
+        "openid"
+    ],
     redirect_to='google_login_callback'
 )
 app.register_blueprint(google_bp, url_prefix="/login")
@@ -529,7 +533,9 @@ def booking_agent_purchase():
             ticket_id = str(uuid.uuid4())
             cursor.execute("INSERT INTO ticket (ticket_id, airline_name, flight_num) VALUES (%s, %s, %s)", (ticket_id, airline_name, flight_num))
             cursor.execute("""
-                INSERT INTO purchases (ticket_id, customer_email, booking_agent_id, purchase_date) 
+                INSERT INTO purchases (ticket_id Continued from previous response...
+
+            , customer_email, booking_agent_id, purchase_date) 
                 VALUES (%s, %s, (SELECT booking_agent_id FROM booking_agent WHERE email = %s), NOW())
             """, (ticket_id, customer_email, session['email']))
             conn.commit()
@@ -1072,4 +1078,4 @@ def flight_status():
     return render_template('flight_status.html')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='localhost', port=5000, ssl_context=('localhost.pem', 'localhost-key.pem'))
