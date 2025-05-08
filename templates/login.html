@@ -27,6 +27,7 @@
         <a href="{{ url_for('register_booking_agent') }}" class="text-blue-500 hover:underline">Booking Agent</a>, or 
         <a href="{{ url_for('register_airline_staff') }}" class="text-blue-500 hover:underline">Airline Staff</a>.
     </p>
+    <p class="mt-4 text-center text-gray-600">Or <a href="{{ url_for('login_google') }}" class="text-blue-500 hover:underline" title="This option is only available for customers.">Login with Google</a> (for customers)</p>
 </div>
 <script>
     document.getElementById('user_type').addEventListener('change', function() {
