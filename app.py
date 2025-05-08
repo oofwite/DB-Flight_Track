@@ -534,9 +534,7 @@ def booking_agent_purchase():
             ticket_id = str(uuid.uuid4())
             cursor.execute("INSERT INTO ticket (ticket_id, airline_name, flight_num) VALUES (%s, %s, %s)", (ticket_id, airline_name, flight_num))
             cursor.execute("""
-                INSERT INTO purchases (ticket_id Continued from previous response...
-
-            , customer_email, booking_agent_id, purchase_date) 
+                INSERT INTO purchases (ticket_id, customer_email, booking_agent_id, purchase_date) 
                 VALUES (%s, %s, (SELECT booking_agent_id FROM booking_agent WHERE email = %s), NOW())
             """, (ticket_id, customer_email, session['email']))
             conn.commit()
