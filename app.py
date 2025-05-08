@@ -360,6 +360,7 @@ def customer_dashboard():
         SELECT f.* FROM flight f 
         JOIN airport depart ON f.departure_airport = depart.airport_name 
         JOIN airport arrive ON f.arrival_airport = arrive.airport_name
+        WHERE f.departure_time >= NOW() AND f.status = 'Upcoming'
     """
     cursor.execute(query_flights)
     flights = cursor.fetchall()
