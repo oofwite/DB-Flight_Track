@@ -364,10 +364,50 @@ def customer_dashboard():
     """
     cursor.execute(query_flights)
     flights = cursor.fetchall()
+    if request.method == 'POST':
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
+    else:
+        start_date = 'DATE_SUB(NOW(), INTERVAL 1 YEAR)'
+        end_date = 'NOW()'
+    # get the total spent by the customer
+    query = """
+        SELECT SUM(f.price) as total_spent
+        FROM purchases p
+        JOIN ticket t ON p.ticket_id = t.ticket_id
+        JOIN flight f ON t.airline_name = f.airline_name AND t.flight_num = f.flight_num
+        WHERE p.customer_email = %s
+    """
+    cursor.execute(query, (session['email']))
+    total_spent = cursor.fetchone()['total_spent'] or 0
+    monthly_query = """
+        SELECT DATE_FORMAT(p.purchase_date, '%%Y-%%m') as month, SUM(f.price) as spent
+        FROM purchases p
+        JOIN ticket t ON p.ticket_id = t.ticket_id
+        JOIN flight f ON t.airline_name = f.airline_name AND t.flight_num = f.flight_num
+        WHERE p.customer_email = %s AND p.purchase_date >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+        GROUP BY month
+    """
+    cursor.execute(monthly_query, (session['email'],))
+    monthly_spending = cursor.fetchall()
+    # get the seats left for each flight
+    for flight in flights:
+        cursor.execute("""
+            SELECT a.seats - COUNT(t.ticket_id) as seats_left
+            FROM airplane a
+            JOIN flight f ON a.airline_name = f.airline_name AND a.airplane_id = f.airplane_id
+            LEFT JOIN ticket t ON f.airline_name = t.airline_name AND f.flight_num = t.flight_num
+            WHERE f.airline_name = %s AND f.flight_num = %s
+        """, (flight['airline_name'], flight['flight_num']))
+        flight['seats_left'] = cursor.fetchone()['seats_left']
     cursor.close()
     conn.close()
-    return render_template('customer_dashboard.html', customer=customer, flights=flights)
-
+    return render_template(
+        'customer_dashboard.html',
+        customer=customer,
+        flights=flights,
+        monthly_spending=monthly_spending
+    )
 # Customer View Flights
 @app.route('/customer/flights', methods=['GET', 'POST'])
 def customer_flights():
