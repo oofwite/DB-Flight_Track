@@ -61,35 +61,29 @@
     <!-- Placeholder for bar charts -->
     <canvas id="ticket_chart" class="mb-6"></canvas>
     <canvas id="commission_chart"></canvas>
-    <!-- Uncomment to enable Chart.js -->
-    <!--
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const ticketCtx = document.getElementById('ticket_chart').getContext('2d');
-        new Chart(ticketCtx, {
+        const custTickets = {{ top_customers_tickets | map(attribute='customer_email') | list | tojson }};
+        const ticketCounts = {{ top_customers_tickets | map(attribute='ticket_count') | list | tojson }};
+        new Chart(document.getElementById('ticket_chart').getContext('2d'), {
             type: 'bar',
             data: {
-                labels: [{% for customer in top_customers_tickets %}'{{ customer['customer_email'] }}',{% endfor %}],
-                datasets: [{
-                    label: 'Tickets',
-                    data: [{% for customer in top_customers_tickets %}{{ customer['ticket_count'] }},{% endfor %}],
-                    backgroundColor: '#4299e1'
-                }]
-            }
+                labels: custTickets,
+                datasets: [{ label: '# Tickets', data: ticketCounts, backgroundColor: 'rgba(54, 162, 235, 0.6)' }]
+            },
+            options: { indexAxis: 'y' }
         });
-        const commissionCtx = document.getElementById('commission_chart').getContext('2d');
-        new Chart(commissionCtx, {
+
+        const custComm = {{ top_customers_commission | map(attribute='customer_email') | list | tojson }};
+        const commValues = {{ top_customers_commission | map(attribute='commission') | list | tojson }};
+        new Chart(document.getElementById('commission_chart').getContext('2d'), {
             type: 'bar',
             data: {
-                labels: [{% for customer in top_customers_commission %}'{{ customer['customer_email'] }}',{% endfor %}],
-                datasets: [{
-                    label: 'Commission ($)',
-                    data: [{% for customer in top_customers_commission %}{{ customer['commission'] }},{% endfor %}],
-                    backgroundColor: '#48bb78'
-                }]
-            }
+                labels: custComm,
+                datasets: [{ label: 'Commission', data: commValues, backgroundColor: 'rgba(255, 159, 64, 0.6)' }]
+            },
+            options: { indexAxis: 'y' }
         });
     </script>
-    -->
 </div>
 {% endblock %}

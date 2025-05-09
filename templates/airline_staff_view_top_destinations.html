@@ -50,6 +50,8 @@
             </div>
         {% endfor %}
     </div>
+    <h3>Top Destinations (3 months)</h3>
+    <canvas id="dest3mChart" width="400" height="200"></canvas>
     <h2 class="text-xl font-semibold text-gray-800 mb-2">Last Year</h2>
     <div class="space-y-2">
         {% for dest in top_destinations_year %}
@@ -58,5 +60,23 @@
             </div>
         {% endfor %}
     </div>
+    <h3>Top Destinations (1 year)</h3>
+    <canvas id="dest1yChart" width="400" height="200"></canvas>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const dest3m = {{ top_destinations_3months | map(attribute='arrival_airport') | list | tojson }};
+    const count3m = {{ top_destinations_3months | map(attribute='flight_count') | list | tojson }};
+    new Chart(document.getElementById('dest3mChart').getContext('2d'), {
+      type: 'bar',
+      data: { labels: dest3m, datasets:[{ label:'# Flights', data: count3m, backgroundColor:'rgba(255,99,132,0.6)' }] }
+    });
+
+    const dest1y = {{ top_destinations_year | map(attribute='arrival_airport') | list | tojson }};
+    const count1y = {{ top_destinations_year | map(attribute='flight_count') | list | tojson }};
+    new Chart(document.getElementById('dest1yChart').getContext('2d'), {
+      type: 'bar',
+      data: { labels: dest1y, datasets:[{ label:'# Flights', data: count1y, backgroundColor:'rgba(54,162,235,0.6)' }] }
+    });
+</script>
 {% endblock %}

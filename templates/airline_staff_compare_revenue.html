@@ -50,24 +50,18 @@
             <p>Indirect Sales (Via Agent): ${{ indirect_revenue }}</p>
         </div>
     </div>
-    <!-- Placeholder for pie chart -->
-    <canvas id="revenue_chart"></canvas>
-    <!-- Uncomment to enable Chart.js -->
-    <!--
+    <h3>Revenue Breakdown (last year)</h3>
+    <canvas id="revenueChart" width="400" height="200"></canvas>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const ctx = document.getElementById('revenue_chart').getContext('2d');
-        new Chart(ctx, {
+        const revData = [{{ direct_revenue }}, {{ indirect_revenue }}];
+        new Chart(document.getElementById('revenueChart').getContext('2d'), {
             type: 'pie',
             data: {
-                labels: ['Direct Sales', 'Indirect Sales'],
-                datasets: [{
-                    data: [{{ direct_revenue }}, {{ indirect_revenue }}],
-                    backgroundColor: ['#4299e1', '#48bb78']
-                }]
+                labels: ['Direct', 'Indirect'],
+                datasets: [{ data: revData, backgroundColor: ['#36A2EB','#FFCE56'] }]
             }
         });
     </script>
-    -->
 </div>
 {% endblock %}

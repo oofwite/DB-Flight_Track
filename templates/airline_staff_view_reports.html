@@ -64,30 +64,27 @@
             </div>
         {% endfor %}
     </div>
-    <!-- Placeholder for bar chart -->
     <canvas id="ticket_sales_chart"></canvas>
-    <!-- Uncomment to enable Chart.js -->
-    <!--
+    <h3>Monthly Tickets</h3>
+    <canvas id="monthlyTicketsChart" width="400" height="200"></canvas>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const ctx = document.getElementById('ticket_sales_chart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
+        const reportMonths = {{ monthly_tickets | map(attribute='month') | list | tojson }};
+        const ticketsPerMonth = {{ monthly_tickets | map(attribute='tickets') | list | tojson }};
+        new Chart(document.getElementById('monthlyTicketsChart').getContext('2d'), {
+            type: 'line',
             data: {
-                labels: [{% for month in monthly_tickets %}'{{ month['month'] }}',{% endfor %}],
+                labels: reportMonths,
                 datasets: [{
                     label: 'Tickets Sold',
-                    data: [{% for month in monthly_tickets %}{{ month['tickets'] }},{% endfor %}],
-                    backgroundColor: '#4299e1'
+                    data: ticketsPerMonth,
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                    fill: true
                 }]
             },
-            options: {
-                scales: {
-                    y: { beginAtZero: true }
-                }
-            }
+            options: { scales: { y: { beginAtZero: true } } }
         });
     </script>
-    -->
 </div>
 {% endblock %}
