@@ -67,7 +67,10 @@ def inject_home_url():
             home_url = url_for('booking_agent_dashboard')
         elif session['user_type'] == 'airline_staff':
             home_url = url_for('airline_staff_dashboard')
-    return dict(home_url=home_url)
+    return dict(
+        home_url=home_url,
+        has_permission=has_permission   # make has_permission available in Jinja
+    )
 
 # Home Route
 @app.route('/')
@@ -356,30 +359,42 @@ def customer_dashboard():
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM customer WHERE email = %s", (session['email'],))
     customer = cursor.fetchone()
-    query_flights = """
+
+    # Fetch customer's upcoming purchased flights for "My Flights" preview
+    query_my_flights = """
+        SELECT f.* FROM flight f
+        JOIN ticket t ON f.airline_name = t.airline_name AND f.flight_num = t.flight_num
+        JOIN purchases p ON t.ticket_id = p.ticket_id
+        WHERE p.customer_email = %s AND f.departure_time >= NOW() AND f.status = 'Upcoming'
+        ORDER BY f.departure_time
+    """
+    cursor.execute(query_my_flights, (session['email'],))
+    my_upcoming_flights = cursor.fetchall()
+
+    # Fetch all upcoming flights for "Available Flights" section
+    query_available_flights = """
         SELECT f.* FROM flight f 
         JOIN airport depart ON f.departure_airport = depart.airport_name 
         JOIN airport arrive ON f.arrival_airport = arrive.airport_name
         WHERE f.departure_time >= NOW() AND f.status = 'Upcoming'
+        ORDER BY f.departure_time
     """
-    cursor.execute(query_flights)
-    flights = cursor.fetchall()
-    if request.method == 'POST':
-        start_date = request.form['start_date']
-        end_date = request.form['end_date']
-    else:
-        start_date = 'DATE_SUB(NOW(), INTERVAL 1 YEAR)'
-        end_date = 'NOW()'
-    # get the total spent by the customer
-    query = """
+    cursor.execute(query_available_flights)
+    available_flights = cursor.fetchall()
+
+    # get the total spent by the customer (this was already for all time)
+    # Renaming to grand_total_spent for clarity in template
+    query_grand_total_spent = """
         SELECT SUM(f.price) as total_spent
         FROM purchases p
         JOIN ticket t ON p.ticket_id = t.ticket_id
         JOIN flight f ON t.airline_name = f.airline_name AND t.flight_num = f.flight_num
         WHERE p.customer_email = %s
     """
-    cursor.execute(query, (session['email']))
-    total_spent = cursor.fetchone()['total_spent'] or 0
+    cursor.execute(query_grand_total_spent, (session['email'],))
+    grand_total_spent_data = cursor.fetchone()
+    grand_total_spent = grand_total_spent_data['total_spent'] if grand_total_spent_data and grand_total_spent_data['total_spent'] is not None else 0
+
     monthly_query = """
         SELECT DATE_FORMAT(p.purchase_date, '%%Y-%%m') as month, SUM(f.price) as spent
         FROM purchases p
@@ -390,8 +405,9 @@ def customer_dashboard():
     """
     cursor.execute(monthly_query, (session['email'],))
     monthly_spending = cursor.fetchall()
-    # get the seats left for each flight
-    for flight in flights:
+
+    # get the seats left for each available flight
+    for flight in available_flights:
         cursor.execute("""
             SELECT a.seats - COUNT(t.ticket_id) as seats_left
             FROM airplane a
@@ -405,9 +421,12 @@ def customer_dashboard():
     return render_template(
         'customer_dashboard.html',
         customer=customer,
-        flights=flights,
-        monthly_spending=monthly_spending
+        my_upcoming_flights=my_upcoming_flights,
+        available_flights=available_flights,
+        monthly_spending=monthly_spending,
+        grand_total_spent=grand_total_spent  # Pass grand total spent
     )
+
 # Customer View Flights
 @app.route('/customer/flights', methods=['GET', 'POST'])
 def customer_flights():

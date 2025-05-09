@@ -40,28 +40,47 @@
         </script>{% extends "base.html" %}
 {% block title %}Booking Agent Dashboard{% endblock %}
 {% block content %}
-<div>
+<div class="container mx-auto px-4 py-6">
     <h1 class="text-2xl font-bold text-gray-800 mb-4">Booking Agent Dashboard</h1>
-    <p class="text-gray-600 mb-4">Welcome, Agent (Email: {{ agent['email'] }})</p>
-    <nav class="flex space-x-4 mb-6">
-        <a href="{{ url_for('booking_agent_flights') }}" class="text-blue-500 hover:underline">View My Flights</a>
-        <a href="{{ url_for('booking_agent_purchase') }}" class="text-blue-500 hover:underline">Purchase Tickets</a>
-        <a href="{{ url_for('booking_agent_top_customers') }}" class="text-blue-500 hover:underline">View Top Customers</a>
-    </nav>
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">Commissions (Last 30 Days)</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-white p-4 rounded-lg shadow-md">
-            <p class="text-gray-600">Total Commission</p>
-            <p class="text-lg font-semibold">${{ commissions['total_commission']|default(0) }}</p>
+    
+    {% if agent %}
+    <div class="box-item p-6 rounded-lg shadow-md mb-8">
+        <h2 class="text-xl font-semibold text-gray-700 mb-3">Agent Details</h2>
+        <p class="text-gray-600"><strong>Email:</strong> {{ agent.email }}</p>
+        <p class="text-gray-600"><strong>Booking Agent ID:</strong> {{ agent.booking_agent_id }}</p>
+    </div>
+    {% endif %}
+
+    {% if commissions %}
+    <div class="box-preview p-6 rounded-lg shadow mb-8">
+        <h2 class="text-xl font-semibold text-gray-700 mb-3">Commissions (Last 30 Days)</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="box-item p-4 rounded shadow">
+                <h3 class="text-lg font-medium text-gray-700">Total Commission</h3>
+                <p class="text-2xl font-bold text-green-600">${{ "%.2f"|format(commissions.total_commission or 0) }}</p>
+            </div>
+            <div class="box-item p-4 rounded shadow">
+                <h3 class="text-lg font-medium text-gray-700">Average Commission</h3>
+                <p class="text-2xl font-bold text-blue-600">${{ "%.2f"|format(commissions.avg_commission or 0) }}</p>
+            </div>
+            <div class="box-item p-4 rounded shadow">
+                <h3 class="text-lg font-medium text-gray-700">Tickets Sold</h3>
+                <p class="text-2xl font-bold text-purple-600">{{ commissions.ticket_count or 0 }}</p>
+            </div>
         </div>
-        <div class="bg-white p-4 rounded-lg shadow-md">
-            <p class="text-gray-600">Average Commission per Ticket</p>
-            <p class="text-lg font-semibold">${{ commissions['avg_commission']|default(0) }}</p>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow-md">
-            <p class="text-gray-600">Total Tickets Sold</p>
-            <p class="text-lg font-semibold">{{ commissions['ticket_count']|default(0) }}</p>
-        </div>
+    </div>
+    {% else %}
+    <div class="box-preview p-6 rounded-lg shadow mb-8">
+        <h2 class="text-xl font-semibold text-gray-700 mb-3">Commissions (Last 30 Days)</h2>
+        <p class="text-gray-600">No commission data available for the last 30 days.</p>
+    </div>
+    {% endif %}
+
+    <!-- Navigation Links -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <a href="{{ url_for('booking_agent_flights') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow text-center transition duration-150">View My Booked Flights</a>
+        <a href="{{ url_for('booking_agent_purchase') }}" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg shadow text-center transition duration-150">Purchase Tickets for Customer</a>
+        <a href="{{ url_for('booking_agent_top_customers') }}" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg shadow text-center transition duration-150">View Top Customers</a>
     </div>
 </div>
 {% endblock %}

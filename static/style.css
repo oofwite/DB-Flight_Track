@@ -137,6 +137,14 @@ ul li {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+/* Box background colors */
+.box-preview {
+    background-color: #f7fafc; /* match Tailwind gray-100 */
+}
+.box-item {
+    background-color: #ffffff; /* match Tailwind white */
+}
+
 /* Footer */
 footer {
     text-align: center;
