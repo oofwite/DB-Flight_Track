@@ -1,126 +1,223 @@
-/* Tailwind CSS CDN */
+/* Import Tailwind CSS CDN */
 @import url('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css');
 
-/* Custom Styles for Dropdown and Components with NYU Color Theme */
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+/* Global Styles */
 body {
     font-family: 'Inter', sans-serif;
-    background-color: #f5f3f6; /* NYU Light Purple/Gray Background */
-    color: #57007E; /* NYU Primary Purple */
+    background: linear-gradient(135deg, #f5f3f6 0%, #e6e0eb 100%); /* NYU-inspired gradient background */
+    color: #3c004f; /* Darker NYU Purple for text */
+    margin: 0;
+    line-height: 1.6;
 }
 
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+    color: #3c004f; /* Darker NYU Purple */
+}
+
+/* Navigation */
 nav {
-    background-color: #57007E; /* NYU Primary Purple */
-    padding: 1rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(90deg, #57007E 0%, #7A1EA1 100%); /* NYU gradient */
+    padding: 1.25rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    transition: all 0.3s ease;
 }
 
 nav a {
-    color: #FFFFFF; /* White for contrast */
-    padding: 0.5rem 1rem;
-    transition: background-color 0.3s ease;
+    color: #ffffff;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    position: relative;
 }
 
 nav a:hover {
-    background-color: #4B006B; /* Darker NYU Purple */
-    border-radius: 0.25rem;
+    background: #4B006B; /* Darker NYU Purple */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+nav a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: #ffffff;
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+nav a:hover::after {
+    width: 50%;
 }
 
 /* Dropdown Menu */
 .dropdown {
     position: relative;
-    display: inline-block;
 }
 
 .dropdown-content {
     display: none;
     position: absolute;
-    background-color: #7A1EA1; /* NYU Secondary Purple */
-    min-width: 160px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    z-index: 10;
-    border-radius: 0.25rem;
+    background: linear-gradient(135deg, #7A1EA1 0%, #57007E 100%); /* NYU gradient */
+    min-width: 200px;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+    border-radius: 0.5rem;
     top: 100%;
     left: 0;
-}
-
-.dropdown-content a {
-    color: #FFFFFF; /* White for contrast */
-    padding: 0.75rem 1rem;
-    display: block;
-    transition: background-color 0.3s ease;
-}
-
-.dropdown-content a:hover {
-    background-color: #4B006B; /* Darker NYU Purple */
+    z-index: 10;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
 }
 
 .dropdown:hover .dropdown-content {
     display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.dropdown-content a {
+    color: #ffffff;
+    padding: 0.75rem 1.25rem;
+    display: block;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.dropdown-content a:hover {
+    background: #4B006B;
+    transform: translateX(5px);
 }
 
 /* Flash Messages */
 .alert {
-    padding: 1rem;
-    margin: 1rem 0;
-    border-radius: 0.375rem;
+    padding: 1rem 1.5rem;
+    margin: 1.5rem 0;
+    border-radius: 0.5rem;
     font-weight: 500;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .alert-success {
-    background-color: #D4EDDA; /* Keep as is for success green */
+    background: linear-gradient(135deg, #D4EDDA 0%, #C3E6CB 100%); /* Enhanced success gradient */
     color: #155724;
+    border: 1px solid #c3e6cb;
 }
 
 .alert-error {
-    background-color: #F8D7DA; /* Keep as is for error red */
+    background: linear-gradient(135deg, #F8D7DA 0%, #F5C6CB 100%); /* Enhanced error gradient */
     color: #721C24;
+    border: 1px solid #f5c6cb;
+}
+
+.alert::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.alert:hover::before {
+    opacity: 1;
 }
 
 /* Forms */
 form {
-    max-width: 500px;
-    margin: 2rem auto;
-    padding: 1.5rem;
-    background-color: #FFFFFF;
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 2.5rem auto;
+    padding: 2rem;
+    background: linear-gradient(135deg, #ffffff 0%, #f9f9fb 100%); /* Subtle white gradient */
+    border-radius: 1rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    transform: translateY(0);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+form:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
 }
 
 form label {
     display: block;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
     font-weight: 600;
     color: #2D3748;
+    font-family: 'Poppins', sans-serif;
 }
 
 form input, form select {
     width: 100%;
-    padding: 0.75rem;
-    margin-bottom: 1rem;
+    padding: 0.85rem;
+    margin-bottom: 1.25rem;
     border: 1px solid #E2E8F0;
-    border-radius: 0.375rem;
-    transition: border-color 0.3s ease;
+    border-radius: 0.5rem;
+    background: #ffffff;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
 }
 
 form input:focus, form select:focus {
     outline: none;
     border-color: #7A1EA1; /* NYU Secondary Purple */
-    box-shadow: 0 0 ###### 3px rgba(122, 30, 161, 0.1);
+    box-shadow: 0 0 0 4px rgba(122, 30, 161, 0.15);
+    background: #f9f9fb;
 }
 
 form button {
-    background-color: #57007E; /* NYU Primary Purple */
-    color: #FFFFFF;
-    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #57007E 0%, #7A1EA1 100%); /* NYU gradient */
+    color: #ffffff;
+    padding: 0.85rem 2rem;
     border: none;
-    border-radius: 0.375rem;
+    border-radius: 0.5rem;
     font-weight: 600;
+    font-family: 'Poppins', sans-serif;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 form button:hover {
-    background-color: #4B006B; /* Darker NYU Purple */
+    background: linear-gradient(135deg, #4B006B 0%, #57007E 100%); /* Darker gradient */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+form button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.4s ease, height 0.4s ease;
+}
+
+form button:hover::after {
+    width: 200px;
+    height: 200px;
 }
 
 /* Lists and Tables */
@@ -130,46 +227,97 @@ ul {
 }
 
 ul li {
-    background-color: #FFFFFF;
-    padding: 1rem;
-    margin-bottom: 0.5rem;
-    border-radius: 0.375rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    background: linear-gradient(135deg, #ffffff 0%, #f9f9fb 100%); /* Subtle gradient */
+    padding: 1.25rem;
+    margin-bottom: 0.75rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Box background colors */
-.box-preview {
-    background-color: #f7fafc; /* match Tailwind gray-100 */
+ul li:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
 }
+
+/* Box Styling */
+.box-preview {
+    background: linear-gradient(135deg, #f7fafc 0%, #e6e0eb 100%); /* Gradient with NYU tint */
+    border: 1px solid rgba(122, 30, 161, 0.1);
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.box-preview:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
 .box-item {
-    background-color: #ffffff; /* match Tailwind white */
+    background: linear-gradient(135deg, #ffffff 0%, #f9f9fb 100%); /* Subtle gradient */
+    border: 1px solid rgba(122, 30, 161, 0.1);
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.box-item:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 /* Footer */
 footer {
+    background: linear-gradient(90deg, #57007E 0%, #7A1EA1 100%); /* NYU gradient */
+    color: #ffffff;
+    padding: 2rem;
     text-align: center;
-    padding: 1rem;
-    background-color: #57007E; /* NYU Primary Purple */
-    color: #FFFFFF; /* White for contrast */
-    position: relative;
-    bottom: 0;
-    width: 100%;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+}
+
+footer p {
+    margin: 0;
+    font-size: 0.95rem;
+    transition: transform 0.3s ease;
+}
+
+footer p:hover {
+    transform: scale(1.05);
 }
 
 /* Responsive Adjustments */
 @media (max-width: 640px) {
     nav {
-        flex-direction: column;
-        align-items: center;
+        padding: 1rem;
     }
 
     nav a {
         display: block;
-        margin: 0.5rem 0;
+        margin: 0.75rem 0;
+        text-align: center;
     }
 
     .dropdown-content {
         position: static;
+        width: 100%;
+        border-radius: 0.5rem;
+        box-shadow: none;
+    }
+
+    form {
+        padding: 1.5rem;
+    }
+
+    h1, h2, h3 {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .box-preview, .box-item {
+        padding: 1rem;
+    }
+
+    form button {
         width: 100%;
     }
 }

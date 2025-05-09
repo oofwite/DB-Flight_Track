@@ -1,11 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Airline Staff Dashboard{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8 bg-gray-100 min-h-screen">
+    <div class="flex flex-col lg:flex-row gap-6">
+        <!-- Left Section: Staff Information and Flights -->
+        <div class="lg:w-3/4">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">Airline Staff Dashboard</h1>
+
+            {% if staff %}
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-6 border border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">Staff Information</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <p class="text-gray-600"><span class="font-medium">Username:</span> {{ staff.username }}</p>
+                    <p class="text-gray-600"><span class="font-medium">Name:</span> {{ staff.first_name }} {{ staff.last_name }}</p>
+                    <p class="text-gray-600"><span class="font-medium">Airline:</span> {{ staff.airline_name }}</p>
+                    <p class="text-gray-600"><span class="font-medium">Date of Birth:</span> {{ staff.date_of_birth.strftime('%Y-%m-%d') if staff.date_of_birth else 'N/A' }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Flights in the Next 30 Days ({{ staff.airline_name }})</h2>
+            <div class="grid grid-cols-1 gap-4">
+                {% if flights %}
+                    {% for flight in flights %}
+                        <div class="bg-white p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 border border-gray-200">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-lg font-semibold text-gray-800">{{ flight.airline_name }} Flight #{{ flight.flight_num }}</p>
+                                    <p class="text-gray-600">{{ flight.departure_airport }} → {{ flight.arrival_airport }}</p>
+                                    <p class="text-gray-600">Departs: {{ flight.departure_time.strftime('%Y-%m-%d %H:%M') }}</p>
+                                    <p class="text-gray-600">Arrives: {{ flight.arrival_time.strftime('%Y-%m-%d %H:%M') }}</p>
+                                </div>
+                                <span class="inline-block px-3 py-1 rounded-full text-sm font-medium
+                                    {% if flight.status == 'Upcoming' %}bg-blue-100 text-blue-800
+                                    {% elif flight.status == 'On-time' %}bg-green-100 text-green-800
+                                    {% elif flight.status == 'Delayed' %}bg-yellow-100 text-yellow-800
+                                    {% elif flight.status == 'Cancelled' %}bg-red-100 text-red-800
+                                    {% else %}bg-gray-100 text-gray-800
+                                    {% endif %}">{{ flight.status }}</span>
+                            </div>
+                            <div class="mt-2 flex justify-between">
+                                <p class="text-gray-600">Price: ${{ "%.2f"|format(flight.price) }}</p>
+                                <p class="text-gray-600">Airplane ID: {{ flight.airplane_id }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200">
+                        <p class="text-gray-600">No upcoming flights for {{ staff.airline_name }} in the next 30 days.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Section: Functionality Sidebar -->
+        <div class="lg:w-1/4">
+            <div class="bg-white p-6 rounded-xl shadow-lg sticky top-8 border border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">Staff Functions</h2>
+                <div class="space-y-2">
+                    <!-- Admin Permissions -->
+                    <a href="{{ url_for('create_flight') }}" class="flex items-center py-2 px-4 rounded-lg font-medium transition duration-150
+                        {% if has_permission(session['username'], 'Admin') %}bg-blue-600 hover:bg-blue-700 text-white
+                        {% else %}bg-gray-200 text-gray-500 cursor-not-allowed
+                        {% endif %}">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.977A4.5 4.5 0 0113.5 13H11V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.413V13H5.5z"></path></svg>
+                        Create Flight
+                    </a>
+                    <a href="{{ url_for('add_airplane') }}" class="flex items-center py-2 px-4 rounded-lg font-medium transition duration-150
+                        {% if has_permission(session['username'], 'Admin') %}bg-blue-600 hover:bg-blue-700 text-white
+                        {% else %}bg-gray-200 text-gray-500 cursor-not-allowed
+                        {% endif %}">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1  Ascension Island $"></path></svg>
+                        Add Airplane
+                    </a>
+                    <a href="{{ url_for('add_airport') }}" class="flex items-center py-2 px-4 rounded-lg font-medium transition duration-150
+                        {% if has_permission(session['username'], 'Admin') %}bg-blue-600 hover:bg-blue-700 text-white
+                        {% else %}bg-gray-200 text-gray-500 cursor-not-allowed
+                        {% endif %}">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M3 5h14a1 1 0 010 2H3a1 1 0 110-2zm0 4h14a1 1 0 010 2H3a1 1 0 110-2zm0 4h14a1 1 0 010 2H3a1 1 0 010-2z"></path></svg>
+                        Add Airport
+                    </a>
+                    <a href="{{ url_for('grant_permission') }}" class="flex items-center py-2 px-4 rounded-lg font-medium transition duration-150
+                        {% if has_permission(session['username'], 'Admin') %}bg-blue-600 hover:bg-blue-700 text-white
+                        {% else %}bg-gray-200 text-gray-500 cursor-not-allowed
+                        {% endif %}">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"></path></svg>
+                        Grant Permissions
+                    </a>
+                    <a href="{{ url_for('add_booking_agent') }}" class="flex items-center py-2 px-4 rounded-lg font-medium transition duration-150
+                        {% if has_permission(session['username'], 'Admin') %}bg-blue-600 hover:bg-blue-700 text-white
+                        {% else %}bg-gray-200 text-gray-500 cursor-not-allowed
+                        {% endif %}">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm1 3a1 1 0 100 2h4a1 1 0 100-2H8z"></path></svg>
+                        Add Booking Agent
+                    </a>
+
+                    <!-- Operator Permissions -->
+                    <a href="{{ url_for('change_status') }}" class="flex items-center py-2 px-4 rounded-lg font-medium transition duration-150
+                        {% if has_permission(session['username'], 'Operator') %}bg-blue-600 hover:bg-blue-700 text-white
+                        {% else %}bg-gray-200 text-gray-500 cursor-not-allowed
+                        {% endif %}">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                        Change Flight Status
+                    </a>
+                    <a href="{{ url_for('view_booking_agents') }}" class="flex items-center py-2 px-4 rounded-lg font-medium transition duration-150
+                        {% if has_permission(session['username'], 'Operator') %}bg-blue-600 hover:bg-blue-700 text-white
+                        {% else %}bg-gray-200 text-gray-500 cursor-not-allowed
+                        {% endif %}">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"></path></svg>
+                        View Top Booking Agents
+                    </a>
+                    <a href="{{ url_for('view_frequent_customers') }}" class="flex items-center py-2 px-4 rounded-lg font-medium transition duration-150
+                        {% if has_permission(session['username'], 'Operator') %}bg-blue-600 hover:bg-blue-700 text-white
+                        {% else %}bg-gray-200 text-gray-500 cursor-not-allowed
+                        {% endif %}">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1 0-3.866-3.134-7-7-7S2 12.134 2 16c0 .34.024.673.07 1H12.93zM17 16c0 1.657-1.343 3-3 3h-1.07A7.975 7.975 0 0016 16c0-.34-.024-.673-.07-1H17z"></path></svg>
+                        View Frequent Customers
+                    </a>
+                    <a href="{{ url_for('view_reports') }}" class="flex items-center py-2 px-4 rounded-lg font-medium transition duration-150
+                        {% if has_permission(session['username'], 'Operator') %}bg-blue-600 hover:bg-blue-700 text-white
+                        {% else %}bg-gray-200 text-gray-500 cursor-not-allowed
+                        {% endif %}">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"></path></svg>
+                        View Sales Reports
+                    </a>
+                    <a href="{{ url_for('compare_revenue') }}" class="flex items-center py-2 px-4 rounded-lg font-medium transition duration-150
+                        {% if has_permission(session['username'], 'Operator') %}bg-blue-600 hover:bg-blue-700 text-white
+                        {% else %}bg-gray-200 text-gray-500 cursor-not-allowed
+                        {% endif %}">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L11.414 15H14a2 2 0 002-2V5a1 1 0 100-2H3zm11.5 4a.5.5 0 01.5.5v4a.5.5 0 01-1 0v-4a.5.5 0 01.5-.5z" clip-rule="evenodd"></path></svg>
+                        Compare Revenue Sources
+                    </a>
+                    <a href="{{ url_for('view_top_destinations') }}" class="flex items-center py-2 px-4 rounded-lg font-medium transition duration-150
+                        {% if has_permission(session['username'], 'Operator') %}bg-blue-600 hover:bg-blue-700 text-white
+                        {% else %}bg-gray-200 text-gray-500 cursor-not-allowed
+                        {% endif %}">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zM3.172 6.172a4 4 0 015.656 0L10 7.343l1.172-1.171a4 4 0 015.656 0 4 4 0 010 5.656l-4.828 4.829a.5.5 0 01-.707 0l-4.829-4.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg>
+                        View Top Destinations
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
+    var gk_isXlsx = false;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+    function filledCell(cell) {
+        return cell !== '' && cell != null;
+    }
+    function loadFileData(filename) {
         if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
             try {
                 var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
@@ -17,17 +163,17 @@
                 // Filter out blank rows (rows where all cells are empty, null, or undefined)
                 var filteredData = jsonData.filter(row => row.some(filledCell));
 
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                // Heuristic to find the header row
                 var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                    row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
                 );
                 // Fallback
                 if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
+                    headerRowIndex = 0;
                 }
 
                 // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
                 csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
                 return csv;
             } catch (e) {
@@ -36,67 +182,6 @@
             }
         }
         return gk_fileData[filename] || "";
-        }
-        </script>{% extends "base.html" %}
-{% block title %}Airline Staff Dashboard{% endblock %}
-{% block content %}
-<div class="container mx-auto px-4 py-6">
-    <h1 class="text-2xl font-bold text-gray-800 mb-6">Airline Staff Dashboard</h1>
-
-    {% if staff %}
-    <div class="box-item p-6 rounded-lg shadow-md mb-8">
-        <h2 class="text-xl font-semibold text-gray-700 mb-3">Staff Information</h2>
-        <p class="text-gray-600"><strong>Username:</strong> {{ staff.username }}</p>
-        <p class="text-gray-600"><strong>Name:</strong> {{ staff.first_name }} {{ staff.last_name }}</p>
-        <p class="text-gray-600"><strong>Airline:</strong> {{ staff.airline_name }}</p>
-        <p class="text-gray-600"><strong>Date of Birth:</strong> {{ staff.date_of_birth.strftime('%Y-%m-%d') if staff.date_of_birth else 'N/A' }}</p>
-    </div>
-    {% endif %}
-
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">Flights in the Next 30 Days ({{ staff.airline_name }})</h2>
-    <div class="space-y-4">
-        {% if flights %}
-            {% for flight in flights %}
-                <div class="box-item p-4 rounded-lg shadow-md">
-                    <p class="text-lg font-semibold">{{ flight.airline_name }} Flight #{{ flight.flight_num }}</p>
-                    <p class="text-gray-600">{{ flight.departure_airport }} to {{ flight.arrival_airport }}</p>
-                    <p class="text-gray-600">Departs: {{ flight.departure_time.strftime('%Y-%m-%d %H:%M') }} - Arrives: {{ flight.arrival_time.strftime('%Y-%m-%d %H:%M') }}</p>
-                    <p class="text-gray-600">Status: <span class="font-medium 
-                        {% if flight.status == 'Upcoming' %}text-blue-600
-                        {% elif flight.status == 'On-time' %}text-green-600
-                        {% elif flight.status == 'Delayed' %}text-yellow-600
-                        {% elif flight.status == 'Cancelled' %}text-red-600
-                        {% else %}text-gray-600
-                        {% endif %}">{{ flight.status }}</span>
-                    </p>
-                    <p class="text-gray-600">Price: ${{ "%.2f"|format(flight.price) }}</p>
-                    <p class="text-gray-600">Airplane ID: {{ flight.airplane_id }}</p>
-                </div>
-            {% endfor %}
-        {% else %}
-            <div class="box-item p-4 rounded-lg shadow-md">
-                <p class="text-gray-600">No upcoming flights for {{ staff.airline_name }} in the next 30 days.</p>
-            </div>
-        {% endif %}
-    </div>
-    
-    <!-- Navigation Links for Airline Staff -->
-    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {% if has_permission(session['username'], 'Admin') %}
-        <a href="{{ url_for('create_flight') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg shadow text-center transition duration-150">Create Flight</a>
-        <a href="{{ url_for('add_airplane') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg shadow text-center transition duration-150">Add Airplane</a>
-        <a href="{{ url_for('add_airport') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg shadow text-center transition duration-150">Add Airport</a>
-        <a href="{{ url_for('grant_permission') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg shadow text-center transition duration-150">Grant Permissions</a>
-        <a href="{{ url_for('add_booking_agent') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg shadow text-center transition duration-150">Add Booking Agent to Airline</a>
-        {% endif %}
-        {% if has_permission(session['username'], 'Operator') %}
-        <a href="{{ url_for('change_status') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg shadow text-center transition duration-150">Change Flight Status</a>
-        <a href="{{ url_for('view_booking_agents') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg shadow text-center transition duration-150">View Top Booking Agents</a>
-        <a href="{{ url_for('view_frequent_customers') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg shadow text-center transition duration-150">View Frequent Customers</a>
-        <a href="{{ url_for('view_reports') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg shadow text-center transition duration-150">View Sales Reports</a>
-        <a href="{{ url_for('compare_revenue') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg shadow text-center transition duration-150">Compare Revenue Sources</a>
-        <a href="{{ url_for('view_top_destinations') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg shadow text-center transition duration-150">View Top Destinations</a>
-        {% endif %}    
-    </div>
-</div>
+    }
+</script>
 {% endblock %}
