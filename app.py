@@ -590,7 +590,7 @@ def booking_agent_purchase():
         cursor.execute("SELECT COUNT(*) as ticket_count FROM ticket WHERE airline_name = %s AND flight_num = %s", (airline_name, flight_num))
         ticket_count = cursor.fetchone()['ticket_count']
         if ticket_count < flight['seats']:
-            ticket_id = str(uuid.uuid4())
+            ticket_id = str(uuid.uuid1())  # Changed from uuid.uuid4()
             cursor.execute("INSERT INTO ticket (ticket_id, airline_name, flight_num) VALUES (%s, %s, %s)", (ticket_id, airline_name, flight_num))
             cursor.execute("""
                 INSERT INTO purchases (ticket_id, customer_email, booking_agent_id, purchase_date) 
