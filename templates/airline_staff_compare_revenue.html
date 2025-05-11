@@ -1,67 +1,141 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script>{% extends "base.html" %}
+{% extends "base.html" %}
 {% block title %}Compare Revenue{% endblock %}
 {% block content %}
-<div>
-    <h1 class="text-2xl font-bold text-gray-800 mb-4">Revenue Comparison (Last Year)</h1>
-    <div class="space-y-2 mb-6">
-        <div class="bg-white p-4 rounded-lg shadow-md">
-            <p>Direct Sales (No Agent): ${{ direct_revenue }}</p>
+<div class="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-12 px-4">
+    <div class="container mx-auto max-w-4xl">
+        <!-- Header -->
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-8 text-center flex items-center justify-center">
+            <svg class="w-8 h-8 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Revenue Comparison (Last Year)
+        </h1>
+
+        <!-- Revenue Data Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 border border-gray-200 flex items-center">
+                <svg class="w-10 h-10 text-blue-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                </svg>
+                <div>
+                    <p class="text-lg font-semibold text-gray-800">Direct Sales (No Agent)</p>
+                    <p class="text-2xl text-blue-600">${{ "%.2f"|format(direct_revenue) }}</p>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 border border-gray-200 flex items-center">
+                <svg class="w-10 h-10 text-yellow-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 005.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+                <div>
+                    <p class="text-lg font-semibold text-gray-800">Indirect Sales (Via Agent)</p>
+                    <p class="text-2xl text-yellow-600">${{ "%.2f"|format(indirect_revenue) }}</p>
+                </div>
+            </div>
         </div>
-        <div class="bg-white p-4 rounded-lg shadow-md">
-            <p>Indirect Sales (Via Agent): ${{ indirect_revenue }}</p>
+
+        <!-- Pie Chart -->
+        <div class="bg-white p-8 rounded-xl shadow-md border border-gray-200">
+            <h3 class="text-xl font-semibold text-gray-700 mb-6">Revenue Breakdown (Last Year)</h3>
+            <canvas id="revenueChart" class="max-w-full"></canvas>
         </div>
-    </div>
-    <h3>Revenue Breakdown (last year)</h3>
-    <canvas id="revenueChart" width="400" height="200"></canvas>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        const revData = [{{ direct_revenue }}, {{ indirect_revenue }}];
-        new Chart(document.getElementById('revenueChart').getContext('2d'), {
-            type: 'pie',
-            data: {
-                labels: ['Direct', 'Indirect'],
-                datasets: [{ data: revData, backgroundColor: ['#36A2EB','#FFCE56'] }]
+
+        <!-- Chart.js and ChartDataLabels Scripts -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
+        <script>
+            // Register ChartDataLabels plugin
+            Chart.register(ChartDataLabels);
+
+            const revData = [{{ direct_revenue }}, {{ indirect_revenue }}];
+            new Chart(document.getElementById('revenueChart').getContext('2d'), {
+                type: 'pie',
+                data: {
+                    labels: ['Direct Sales', 'Indirect Sales'],
+                    datasets: [{
+                        data: revData,
+                        backgroundColor: ['#36A2EB', '#FFCE56'],
+                        borderColor: ['#ffffff', '#ffffff'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 14, family: 'Inter' },
+                                color: '#374151'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1F2937',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            borderColor: '#3B82F6',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    let value = context.raw || 0;
+                                    let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    let percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: $${value.toFixed(2)} (${percentage}%)`;
+                                }
+                            }
+                        },
+                        datalabels: {
+                            formatter: (value, ctx) => {
+                                let total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                let percentage = ((value / total) * 100).toFixed(1);
+                                return `${percentage}%`;
+                            },
+                            color: '#ffffff',
+                            font: { weight: 'bold', size: 12 },
+                            textShadow: '0 0 4px rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                }
+            });
+        </script>
+
+        <!-- XLSX Processing Script -->
+        <script type="text/javascript">
+            var gk_isXlsx = false;
+            var gk_xlsxFileLookup = {};
+            var gk_fileData = {};
+            function filledCell(cell) {
+                return cell !== '' && cell != null;
             }
-        });
-    </script>
+            function loadFileData(filename) {
+                if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+                    try {
+                        var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                        var firstSheetName = workbook.SheetNames[0];
+                        var worksheet = workbook.Sheets[firstSheetName];
+                        var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                        var filteredData = jsonData.filter(row => row.some(filledCell));
+                        var headerRowIndex = filteredData.findIndex((row, index) =>
+                            row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                        );
+                        if (headerRowIndex === -1 || headerRowIndex > 25) {
+                            headerRowIndex = 0;
+                        }
+                        var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+                        csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                        return csv;
+                    } catch (e) {
+                        console.error(e);
+                        return "";
+                    }
+                }
+                return gk_fileData[filename] || "";
+            }
+        </script>
+    </div>
 </div>
 {% endblock %}
