@@ -1090,15 +1090,15 @@ def purchase_ticket(airline_name, flight_num):
             flash('You already have a ticket for this flight.', 'error')
             return redirect(url_for('customer_dashboard'))
         query_flight = """
-            SELECT f.airline_name, f.flight_num, a.seats
+            SELECT f.airline_name, f.flight_num, a.seats, f.departure_time
             FROM flight f
             JOIN airplane a ON f.airline_name = a.airline_name AND f.airplane_id = a.airplane_id
-            WHERE f.airline_name = %s AND f.flight_num = %s
+            WHERE f.airline_name = %s AND f.flight_num = %s AND f.departure_time >= NOW()
         """
         cursor.execute(query_flight, (airline_name, flight_num))
         flight = cursor.fetchone()
         if not flight:
-            flash('Flight not found!', 'error')
+            flash('Flight not found or has already departed!', 'error')
             return redirect(url_for('customer_dashboard'))
         query_tickets = "SELECT COUNT(*) as ticket_count FROM ticket WHERE airline_name = %s AND flight_num = %s"
         cursor.execute(query_tickets, (airline_name, flight_num))
