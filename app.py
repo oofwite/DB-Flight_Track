@@ -757,15 +757,19 @@ def add_airplane():
                 cursor.execute("INSERT INTO airplane (airline_name, airplane_id, seats) VALUES (%s, %s, %s)", (airline_name, airplane_id, seats))
                 conn.commit()
                 flash('Airplane added successfully!', 'success')
+                # Re-fetch airplanes to include the newly added one
                 cursor.execute("SELECT * FROM airplane WHERE airline_name = %s", (airline_name,))
                 airplanes = cursor.fetchall()
-                return render_template('airline_staff_add_airplane.html', airplanes=airplanes, added=True)
+                return render_template('airline_staff_add_airplane.html', airplanes=airplanes)
+        
+        # This part is reached on GET, or if POST had "airplane exists" error and didn't return from the 'else' block
         cursor.execute("SELECT * FROM airplane WHERE airline_name = %s", (session['airline_name'],))
         airplanes = cursor.fetchall()
         return render_template('airline_staff_add_airplane.html', airplanes=airplanes)
     except pymysql.MySQLError as e:
         conn.rollback()
         flash(f'Database error: {e}', 'error')
+        # Ensure airplanes are fetched even if an error occurred earlier or during the main fetch
         cursor.execute("SELECT * FROM airplane WHERE airline_name = %s", (session['airline_name'],))
         airplanes = cursor.fetchall()
         return render_template('airline_staff_add_airplane.html', airplanes=airplanes)

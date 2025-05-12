@@ -53,15 +53,20 @@
         </div>
         <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">Add Airplane</button>
     </form>
-    {% if added %}
-        <h2 class="text-xl font-semibold text-gray-800 mt-6 mb-2">All Airplanes</h2>
+    
+    <h2 class="text-xl font-semibold text-gray-800 mt-6 mb-2">All Airplanes for {{ session['airline_name'] }}</h2>
+    {% if airplanes %}
         <div class="space-y-2">
             {% for airplane in airplanes %}
                 <div class="bg-white p-4 rounded-lg shadow-md">
                     <p>Airplane ID: {{ airplane['airplane_id'] }}, Seats: {{ airplane['seats'] }}</p>
                 </div>
+            {% else %}
+                <p class="text-gray-600">No airplanes found for this airline yet.</p>
             {% endfor %}
         </div>
+    {% else %}
+        <p class="text-gray-600">No airplanes found for this airline yet.</p>
     {% endif %}
 </div>
 {% endblock %}
