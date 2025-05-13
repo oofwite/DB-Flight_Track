@@ -273,8 +273,6 @@ def register_airline_staff():
                 VALUES (%s, MD5(%s), %s, %s, %s, %s)
             """
             cursor.execute(staff_query, (username, password, first_name, last_name, date_of_birth, airline_name))
-            permission_query = "INSERT INTO permission (username, permission_type) VALUES (%s, %s)"
-            cursor.execute(permission_query, (username, 'Operator'))
             conn.commit()
             flash('Registration successful! Please log in.', 'success')
             return redirect(url_for('login'))
